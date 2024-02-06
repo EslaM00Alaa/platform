@@ -1,3 +1,5 @@
+const isReady = require("./database/dbready");
+
 require("dotenv").config();
 const express = require("express"),
   bodyParser = require("body-parser"),
@@ -32,7 +34,8 @@ app.use('/api/teacher',require("./routes/teacher/login"))
 
 app.get("/", (req, res) => res.send("Hello World!"));
 
-client.connect().then(() => {
+client.connect().then(async() => {
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
+  await isReady();
 });
