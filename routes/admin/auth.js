@@ -2,7 +2,7 @@ const
      express = require('express') ,
      client = require("../../database/db"),
      validateAdmin=require("../../models/admin"),
-     createToken=require("../../utils/AdminToken")
+     createToken=require("../../utils/AdminToken"),
      router =express.Router();
 
 

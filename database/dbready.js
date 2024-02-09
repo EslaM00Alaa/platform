@@ -67,7 +67,18 @@ async function isReady() {
           class VARCHAR(255) NOT NULL ,
           teacher_id INT  references teachers(id) not null
       )
-      `
+      `,
+      `CREATE TABLE groups (
+        id SERIAL PRIMARY KEY ,
+        teacher_id INT REFERENCES teachers(id) NOT NULL,
+        group_name VARCHAR(255) NOT NULL,
+        grad VARCHAR(255)	NOT NULL 
+        )`,
+        `CREATE TABLE joingroup(
+          group_id INT REFERENCES groups(id),
+          std_id INT REFERENCES users(id)
+          )
+          `
 
       ];   
   
@@ -76,7 +87,9 @@ async function isReady() {
         "users",
         "covers",
         "teachers",
-        "classes"
+        "classes",
+        "groups",
+        "joingroup"
       ];
   
       let c = 0;

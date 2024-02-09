@@ -27,6 +27,7 @@ app.use('/api/admin',require("./routes/admin/auth"))
 app.use('/api/user',require("./routes/user/auth"))
 app.use('/api/teacher',require("./routes/teacher/register"))
 app.use('/api/teacher',require("./routes/teacher/login"))
+app.use('/api/groups',require("./routes/groups/group"))
 
 
 
