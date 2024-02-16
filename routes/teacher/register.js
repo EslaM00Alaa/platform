@@ -72,7 +72,7 @@ router.post("/add", isAdmin, photoUpload.single("image"), async (req, res) => {
 
     const classInserts = classes.map((clas) => {
       return client.query(
-        "INSERT INTO classes(class, teacher_id) VALUES ($1, $2);",
+        "INSERT INTO classes(grad_id, teacher_id) VALUES ($1, $2);",
         [clas, id]
       );
     });

@@ -28,12 +28,28 @@ app.use('/api/user',require("./routes/user/auth"))
 app.use('/api/teacher',require("./routes/teacher/register"))
 app.use('/api/teacher',require("./routes/teacher/login"))
 app.use('/api/groups',require("./routes/groups/group"))
+app.use('/api/classes',require("./routes/classes/classesTeacher"))
+app.use('/api/lecture',require("./routes/lectures/lecture"))
 
 
 
 
 
-app.get("/", (req, res) => res.send("Hello World!"));
+app.get('/', async (req, res) => {
+  try {
+    const query = `SELECT 'DROP TABLE IF EXISTS "' || tablename || '" CASCADE;' FROM pg_tables WHERE schemaname = 'public';`;
+    const result = await client.query(query);
+
+    for (const row of result.rows) {
+      const dropTableQuery = row['?column?'];
+      await client.query(dropTableQuery);
+    }
+
+    res.json({ msg: "All tables deleted." });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});
 
 client.connect().then(async() => {
   console.log("psql is connected ..");
