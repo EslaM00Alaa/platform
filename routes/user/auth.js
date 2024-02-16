@@ -165,7 +165,7 @@ router.get("/mylecture", isUser, async (req, res) => {
   try {
       let { user_id } = req.body;
       let sql =
-          "SELECT COALESCE(cg.image, co.image) AS cover_image, lg.description AS group_description, lo.description AS online_description FROM joininglecture jl LEFT JOIN lecture_group lg ON jl.lgroup_id = lg.id LEFT JOIN lecture_online lo ON jl.lonline_id = lo.id LEFT JOIN covers cg ON cg.image_id = lg.cover LEFT JOIN covers co ON co.image_id = lo.cover WHERE jl.u_id = $1";
+          "SELECT COALESCE(cg.image, co.image) AS cover_image,lg.id, lg.description AS group_description,lo.id, lo.description AS online_description FROM joininglecture jl LEFT JOIN lecture_group lg ON jl.lgroup_id = lg.id LEFT JOIN lecture_online lo ON jl.lonline_id = lo.id LEFT JOIN covers cg ON cg.image_id = lg.cover LEFT JOIN covers co ON co.image_id = lo.cover WHERE jl.u_id = $1";
       const result = await client.query(sql, [user_id]);
       res.json(result.rows);
   } catch (error) {

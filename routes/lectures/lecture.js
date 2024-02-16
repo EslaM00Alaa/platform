@@ -155,7 +155,7 @@ router.get("/group", isTeacher, async (req, res) => {
   try {
     const teacherId = req.body.teacher_id;
     const result = await client.query(
-      "SELECT g.id, g.cover, g.description, gr.name FROM lecture_group g JOIN grades gr ON g.grad_id = gr.id WHERE g.teacher_id = $1",
+      "SELECT g.id, c.image, g.description, gr.name FROM lecture_group g JOIN grades gr ON g.grad_id = gr.id JOIN covers c on c.image_id = g.cover  WHERE g.teacher_id = $1",
       [teacherId]
     );
     res.json(result.rows);
@@ -168,7 +168,7 @@ router.get("/online", isTeacher, async (req, res) => {
   try {
     const teacherId = req.body.teacher_id;
     const result = await client.query(
-      "SELECT g.id, g.cover, g.description, g.price, gr.name FROM lecture_online g JOIN grades gr ON g.grad_id = gr.id WHERE g.teacher_id = $1",
+      "SELECT g.id,  c.image , g.description, g.price, gr.name FROM lecture_online g JOIN grades gr ON g.grad_id = gr.id  JOIN covers c on c.image_id = g.cover WHERE g.teacher_id = $1",
       [teacherId]
     );
     res.json(result.rows);
@@ -182,7 +182,7 @@ router.get("/group/:id", isTeacher, async (req, res) => {
     const teacherId = req.body.teacher_id;
     const gradId = req.params.id;
     const result = await client.query(
-      "SELECT g.id, g.cover, g.description, gr.name FROM lecture_group g JOIN grades gr ON g.grad_id = gr.id WHERE g.teacher_id = $1 AND g.grad_id = $2",
+      "SELECT g.id,  c.image , g.description, gr.name FROM lecture_group g JOIN grades gr ON g.grad_id = gr.id  JOIN covers c on c.image_id = g.cover WHERE g.teacher_id = $1 AND g.grad_id = $2",
       [teacherId, gradId]
     );
     res.json(result.rows);
@@ -196,7 +196,7 @@ router.get("/online/:grad_id", isTeacher, async (req, res) => {
     const teacherId = req.body.teacher_id;
     const gradId = req.params.grad_id;
     const result = await client.query(
-      "SELECT g.id, g.cover, g.description, g.price, gr.name FROM lecture_online g JOIN grades gr ON g.grad_id = gr.id WHERE g.teacher_id = $1 AND g.grad_id = $2",
+      "SELECT g.id,  c.image , g.description, g.price, gr.name FROM lecture_online g JOIN grades gr ON g.grad_id = gr.id   JOIN covers c on c.image_id = g.cover WHERE g.teacher_id = $1 AND g.grad_id = $2",
       [teacherId, gradId]
     );
     res.json(result.rows);
