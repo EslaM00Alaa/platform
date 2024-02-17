@@ -23,11 +23,11 @@ router.post("/login", async (req, res) => {
           req.body.pass,
           result.rows[0].pass
         );
+        obj.role="teacher";
         if (isPasswordMatch)
           return res.json({
             token: generateToken(result.rows[0].id, result.rows[0].mail),
             Data: obj,
-            role:"teacher"
           });
         else return res.status(404).json({ msg: "USER NAME OR PASSWOR INVLID" });
       } else {
