@@ -173,6 +173,7 @@ router.get("/mylecture", isUser, async (req, res) => {
   }
 });
 
+
 router.get("/lecture/:teacherId", isUser, async (req, res) => {
   try {
     const { teacherId } = req.params;
@@ -207,6 +208,7 @@ router.get("/lecture/:teacherId", isUser, async (req, res) => {
     return res.status(500).json({ msg: "Internal server error" });
   }
 });
+
 
 
 
