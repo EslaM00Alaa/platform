@@ -173,6 +173,41 @@ router.get("/mylecture", isUser, async (req, res) => {
   }
 });
 
+router.get("/lecture/:teacherId", isUser, async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    const { user_id } = req.body;
+
+    // Fetch user's graduation ID
+    const grad_id = (await client.query("SELECT grad FROM users WHERE id = $1", [user_id])).rows[0].grad;
+
+    // Fetch all lectures by the given teacher for the user's graduation
+    const lecturesQuery = `
+      SELECT 
+        co.image AS cover_image,
+        lo.id,
+        lo.description,
+        lo.price,
+        CASE WHEN j.u_id IS NULL THEN FALSE ELSE TRUE END AS open
+      FROM 
+        lecture_online lo 
+      JOIN 
+        covers co ON co.image_id = lo.cover 
+      LEFT JOIN 
+        joininglecture j ON lo.id = j.lonline_id AND j.u_id = $1
+      WHERE 
+        lo.grad_id = $2 AND lo.teacher_id = $3`;
+
+    const lecturesResult = await client.query(lecturesQuery, [user_id, grad_id, teacherId]);
+    const lecturesData = lecturesResult.rows;
+
+    res.json(lecturesData);
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
 
 
 

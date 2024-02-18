@@ -106,13 +106,21 @@ async function isReady() {
       );
       `,
       `
-      CREATE TABLE IF NOT EXISTS joininglecture (
+        CREATE TABLE IF NOT EXISTS joininglecture (
         id SERIAL PRIMARY KEY,
         u_id INT REFERENCES users (id) NOT NULL,
         lgroup_id INT REFERENCES lecture_group (id),
         lonline_id INT REFERENCES lecture_online (id)
     );    
+     `,
      `
+     CREATE TABLE IF NOT EXISTS groupslecture (
+      g_id SERIAL PRIMARY KEY,
+      l_id INT REFERENCES users (id) NOT NULL
+      );    
+     `
+     
+
     ];
 
     const tablesToCheck = [
@@ -126,7 +134,8 @@ async function isReady() {
       "joingroup",
       "lecture_group",
       "lecture_online",
-      "joininglecture"
+      "joininglecture",
+      "groupslecture"
     ];
 
     let c = 0;

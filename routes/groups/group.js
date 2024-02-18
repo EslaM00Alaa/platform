@@ -63,27 +63,48 @@ router.get("/:id", isTeacher, async (req, res) => {
     }
   });
  // ادخال طالب المجموعه
-router.post("/join", isTeacher, async (req, res) => {
-    try {
-      let group_id = req.body.group_id;
-      let student_mail = req.body.mail;
-      let std = await client.query("SELECT * FROM users WHERE mail = $1", [student_mail]);
-      if (std.rows.length > 0) {
-        let stdId = std.rows[0].id;
-        await client.query("INSERT INTO joingroup (group_id, std_id) VALUES ($1, $2)", [group_id, stdId]);
-        return res.status(200).json("Student joined the group.");
-      } else {
-        return res.status(404).json({ msg: "This student is not registered." });
-      }
-    } catch (error) {
-      return res.status(500).json({ msg: error.message });
+ router.post("/join", isTeacher, async (req, res) => {
+  try {
+    const { group_id, mail } = req.body;
+
+    // Check if the student is registered
+    const std = await client.query("SELECT id FROM users WHERE mail = $1", [mail]);
+    if (std.rows.length === 0) {
+      return res.status(404).json({ msg: "This student is not registered." });
     }
-  });
+
+    const stdId = std.rows[0].id;
+
+    // Check if the student is already in the group
+    const existingMembership = await client.query("SELECT * FROM joingroup WHERE group_id = $1 AND std_id = $2", [group_id, stdId]);
+    if (existingMembership.rows.length > 0) {
+      return res.status(409).json({ msg: "This student is already in this group." });
+    }
+
+    // Insert the student into the group
+    await client.query("INSERT INTO joingroup (group_id, std_id) VALUES ($1, $2)", [group_id, stdId]);
+
+    // Get lectures associated with the group
+    const lectures = await client.query("SELECT l_id FROM groupslecture WHERE g_id = $1", [group_id]);
+
+    // Insert the student into joining lectures
+    const insertions = lectures.rows.map(async lecture => {
+      await client.query("INSERT INTO joininglecture (u_id, lgroup_id) VALUES ($1, $2)", [stdId, lecture.l_id]);
+    });
+
+    await Promise.all(insertions);
+
+    return res.status(200).json("Student joined the group.");
+  } catch (error) {
+    return res.status(500).json({ msg: error.message });
+  }
+});
 
 //  available lecture for group   
 router.post("/openlecture/group", isTeacher,async (req, res) => {
   try {
     let { l_id, g_id } = req.body;
+    await client.query("INSERT INTO groupslecture (g_id,l_id) VALUES ($1,$2);",[g_id,l_id]);              
     let result = await client.query(
       "SELECT u.id FROM joingroup j JOIN users u ON j.std_id = u.id WHERE j.group_id = $1",
       [g_id]
