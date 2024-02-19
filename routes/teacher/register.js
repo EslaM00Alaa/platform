@@ -98,6 +98,7 @@ router.post("/add", isAdmin, photoUpload.single("image"), async (req, res) => {
   }
 });
 
+
 router.get("/", async (req, res) => {
   try {
     let result = await client.query(
@@ -108,6 +109,27 @@ router.get("/", async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 });
+
+
+router.get("/:grad_id", async (req, res) => {
+   try {
+    let result = await client.query("select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele from teachers t join covers c on t.cover = c.image_id join classes cl on cl.teacher_id = t.id where cl.grad_id = $1;",[req.params.grad_id]);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
 
 
 router.delete("/:id", isAdmin, async (req, res) => {
