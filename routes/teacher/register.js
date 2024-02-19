@@ -102,7 +102,7 @@ router.post("/add", isAdmin, photoUpload.single("image"), async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     let result = await client.query(
-      "select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele from teachers t join covers c on t.cover = c.image_id  "
+      "select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele , COUNT(lo.id) AS lecture_count  from teachers t join covers c on t.cover = c.image_id LEFT JOIN  lecture_online lo ON lo.teacher_id = t.id  GROUP BY  t.id, c.image, t.name, t.description, t.mail, t.subject, t.whats, t.facebook, t.tele; "
     );
     res.json(result.rows);
   } catch (error) {
@@ -113,7 +113,7 @@ router.get("/", async (req, res) => {
 
 router.get("/:grad_id", async (req, res) => {
    try {
-    let result = await client.query("select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele from teachers t join covers c on t.cover = c.image_id join classes cl on cl.teacher_id = t.id where cl.grad_id = $1;",[req.params.grad_id]);
+    let result = await client.query("select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele , COUNT(lo.id) AS lecture_count  from teachers t join covers c on t.cover = c.image_id join classes cl on cl.teacher_id = t.id LEFT JOIN  lecture_online lo ON lo.teacher_id = t.id    where cl.grad_id = $1 GROUP BY t.id, c.image, t.name, t.description, t.mail, t.subject, t.whats, t.facebook, t.tele;",[req.params.grad_id]);
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ msg: error.message });
@@ -122,7 +122,17 @@ router.get("/:grad_id", async (req, res) => {
 
 
 
-
+router.get("/teacher/:id", async (req, res) => {
+  try {
+      let teacher_id = req.params.id; 
+      let result = await client.query(
+      "select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele , COUNT(lo.id) AS lecture_count  from teachers t join covers c on t.cover = c.image_id LEFT JOIN  lecture_online lo ON lo.teacher_id = t.id WHERE t.id = $1  GROUP BY  t.id, c.image, t.name, t.description, t.mail, t.subject, t.whats, t.facebook, t.tele; "
+   ,[teacher_id]);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});
 
 
 
