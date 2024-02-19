@@ -210,14 +210,48 @@ router.get("/lecture/:teacherId", isUser, async (req, res) => {
 });
 
 
-router.get("/myteacher",isUser,async (req, res) => {
+router.get("/myteacher", isUser, async (req, res) => {
   try {
-    const grad_id = (await client.query("SELECT grad FROM users WHERE id = $1", [req.body.user_id])).rows[0].grad;
-   let result = await client.query("select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele from teachers t join covers c on t.cover = c.image_id join classes cl on cl.teacher_id = t.id where cl.grad_id = $1;",[grad_id]);
-   res.json(result.rows);
- } catch (error) {
-   res.status(500).json({ msg: error.message });
- }
+    const { user_id } = req.body; // Destructure user_id directly from req.body
+    const queryResult = await client.query("SELECT grad FROM users WHERE id = $1", [user_id]);
+    
+    // Check if any rows were returned
+    if (queryResult.rows.length === 0) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    const grad_id = queryResult.rows[0].grad;
+    
+    const result = await client.query(`
+      SELECT 
+        t.id,
+        c.image,
+        t.name,
+        t.description,
+        t.mail,
+        t.subject,
+        t.whats,
+        t.facebook,
+        t.tele,
+        COUNT(lo.id) AS lecture_count 
+      FROM 
+        teachers t 
+      JOIN 
+        covers c ON t.cover = c.image_id 
+      JOIN 
+        classes cl ON cl.teacher_id = t.id 
+      LEFT JOIN 
+        lecture_online lo ON lo.teacher_id = t.id  
+      WHERE 
+        cl.grad_id = $1 
+      GROUP BY 
+        t.id, c.image, t.name, t.description, t.mail, t.subject, t.whats, t.facebook, t.tele;
+    `, [grad_id]);
+
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
 });
 
 
