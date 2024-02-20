@@ -1,3 +1,4 @@
+const isUser = require("../../middleware/isUser");
 const photoUpload = require("../../utils/uploadimage");
 const { cloadinaryUploadImage , cloadinaryRemoveImage } = require("../../utils/uploadimageCdn");
 
@@ -122,13 +123,49 @@ router.get("/:grad_id", async (req, res) => {
 
 
 
-router.get("/teacher/:id", async (req, res) => {
+router.get("/teacher/:id",isUser,async (req, res) => {
   try {
       let teacher_id = req.params.id; 
-      let result = await client.query(
-      "select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele , COUNT(lo.id) AS lecture_count  from teachers t join covers c on t.cover = c.image_id LEFT JOIN  lecture_online lo ON lo.teacher_id = t.id WHERE t.id = $1  GROUP BY  t.id, c.image, t.name, t.description, t.mail, t.subject, t.whats, t.facebook, t.tele; "
-   ,[teacher_id]);
+     
+      const { user_id } = req.body; // Destructure user_id directly from req.body
+      const queryResult = await client.query("SELECT u.grad , g.name FROM users u join grades g on u.grad = g.id WHERE u.id = $1", [user_id]);
+      
+      // Check if any rows were returned
+      if (queryResult.rows.length === 0) {
+        return res.status(404).json({ msg: "User not found" });
+      }
+  
+      const grad_id = queryResult.rows[0].grad;
+      const grad = queryResult.rows[0].name;
+
+      const result = await client.query(`
+      SELECT 
+        t.id,
+        c.image,
+        t.name,
+        t.description,
+        t.mail,
+        t.subject,
+        t.whats,
+        t.facebook,
+        t.tele,
+        COUNT(lo.id) AS lecture_count 
+      FROM 
+        teachers t 
+      JOIN 
+        covers c ON t.cover = c.image_id 
+      JOIN 
+        classes cl ON cl.teacher_id = t.id 
+      LEFT JOIN 
+        lecture_online lo ON lo.teacher_id = t.id  
+      WHERE 
+        cl.grad_id = $1 AND lo.grad_id = $2 AND t.id = $3
+      GROUP BY 
+        t.id, c.image, t.name, t.description, t.mail, t.subject, t.whats, t.facebook, t.tele;
+    `, [grad_id,grad_id,teacher_id]);
+      result.rows[0].grad = grad
     res.json(result.rows);
+
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }

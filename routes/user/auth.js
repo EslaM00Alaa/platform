@@ -243,10 +243,10 @@ router.get("/myteacher", isUser, async (req, res) => {
       LEFT JOIN 
         lecture_online lo ON lo.teacher_id = t.id  
       WHERE 
-        cl.grad_id = $1 
+        cl.grad_id = $1 AND lo.grad_id = $2
       GROUP BY 
         t.id, c.image, t.name, t.description, t.mail, t.subject, t.whats, t.facebook, t.tele;
-    `, [grad_id]);
+    `, [grad_id,grad_id]);
 
     res.json(result.rows);
   } catch (error) {
