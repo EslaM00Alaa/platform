@@ -191,6 +191,49 @@ router.get("/group/:id", isTeacher, async (req, res) => {
   }
 });
 
+
+// router.delete("/group/:lid", isTeacher, async (req, res) => {
+//   const client = await pool.connect(); // Assuming you're using a database connection pool
+
+//   try {
+//       const teacherId = req.body.teacher_id;
+//       const lectureId = req.params.lid;
+
+
+//       const { rows } = await client.query("SELECT cover FROM lecture_group WHERE id = $1 AND teacher_id = $2", [lectureId, teacherId]);
+//       if (rows.length === 0) {
+//           return res.status(404).json({ msg: "Lecture group not found for the specified teacher." });
+//       }
+//       const imgId = rows[0].cover;
+
+//       await client.query('BEGIN');
+
+      
+//       await cloadinaryRemoveImage(imgId);
+
+      
+//       await client.query("DELETE FROM covers WHERE image_id = $1", [imgId]);
+
+    
+//       await client.query("DELETE FROM lecture_group WHERE id = $1 AND teacher_id = $2", [lectureId, teacherId]);
+
+  
+//       await client.query('COMMIT');
+
+//       res.json({ msg: "Lecture group and associated cover image deleted successfully." });
+//   } catch (error) {
+//       // Rollback transaction on error
+//       await client.query('ROLLBACK');
+//       console.error("Error in deleting lecture group:", error);
+//       res.status(500).json({ msg: "Internal server error." });
+//   } finally {
+//       // Release the client back to the pool
+//       client.release();
+//   }
+// });
+
+
+
 router.get("/online/:grad_id", isTeacher, async (req, res) => {
   try {
     const teacherId = req.body.teacher_id;
@@ -207,6 +250,46 @@ router.get("/online/:grad_id", isTeacher, async (req, res) => {
 
 
 
+// router.delete("/online/:lid", isTeacher, async (req, res) => {
+//   const client = await pool.connect(); // Assuming you're using a database connection pool
+
+//   try {
+//       const teacherId = req.body.teacher_id;
+//       const lectureId = req.params.lid;
+
+//       // Fetch cover image ID
+//       const { rows } = await client.query("SELECT cover FROM lecture_group WHERE id = $1 AND teacher_id = $2", [lectureId, teacherId]);
+//       if (rows.length === 0) {
+//           return res.status(404).json({ msg: "Lecture group not found for the specified teacher." });
+//       }
+//       const imgId = rows[0].cover;
+
+//       // Start transaction
+//       await client.query('BEGIN');
+
+//       // Remove image from Cloudinary
+//       await cloadinaryRemoveImage(imgId);
+
+//       // Delete image record from the database
+//       await client.query("DELETE FROM covers WHERE image_id = $1", [imgId]);
+
+//       // Delete lecture group record
+//       await client.query("DELETE FROM lecture_online WHERE id = $1 AND teacher_id = $2", [lectureId, teacherId]);
+
+//       // Commit transaction
+//       await client.query('COMMIT');
+
+//       res.json({ msg: "Lecture group and associated cover image deleted successfully." });
+//   } catch (error) {
+//       // Rollback transaction on error
+//       await client.query('ROLLBACK');
+//       console.error("Error in deleting lecture group:", error);
+//       res.status(500).json({ msg: "Internal server error." });
+//   } finally {
+//       // Release the client back to the pool
+//       client.release();
+//   }
+// });
 
 
 
@@ -244,7 +327,8 @@ router.get("/online/:grad_id", isTeacher, async (req, res) => {
 
 
 
-router.delete("online/:id", isTeacher, async (req, res) => {
+
+router.delete("/online/:id", isTeacher, async (req, res) => {
   try {
     const lectureId = req.params.id;
     const teacherId = req.body.teacher_id;
@@ -283,7 +367,7 @@ router.delete("online/:id", isTeacher, async (req, res) => {
 });
 
 
-router.delete("group/:id", isTeacher, async (req, res) => {
+router.delete("/group/:id", isTeacher, async (req, res) => {
   try {
     const lectureId = req.params.id;
     const teacherId = req.body.teacher_id;
