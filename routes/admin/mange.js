@@ -3,7 +3,6 @@ const
      client = require("../../database/db"),
      isAdmin = require("../../middleware/isAdmin"),
      generateRandomString=require("../../utils/createcode");
-const { route } = require('./auth');
      router =express.Router();
 
 
@@ -30,6 +29,10 @@ const { route } = require('./auth');
         }
     });
     
+    router.get("/allcodes",async(req,res)=>{
+        let result = await client.query("SELECT * FROM codes ;")
+        res.json(result.rows);
+    })
 
 
 

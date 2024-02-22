@@ -9,7 +9,7 @@ function verifyToken(token) {
     return { id, mail };
   } catch (err) {
     // Handle token verification error
-    console.error("Token verification failed:");
+    console.error("Token verification failed:", err.message);
     return null;
   }
 }

@@ -3,7 +3,9 @@ const jwt = require("jsonwebtoken");
 const SALT = process.env.SALT;
 
 function generateToken(id, mail) {
-  return jwt.sign({ id, mail }, SALT);
+  const expirationTime = '7d'; // Set expiration time to 7 days
+
+  return jwt.sign({ id, mail }, SALT, { expiresIn: expirationTime });
 }
 
 module.exports = generateToken;

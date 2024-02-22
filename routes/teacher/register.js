@@ -70,7 +70,7 @@ router.post("/add", isAdmin, photoUpload.single("image"), async (req, res) => {
       [public_id, name, description, mail, pass, subject, whats, facebook, tele]
     );
     const id = result.rows[0].id;
-
+    await client.query("INSERT INTO teacherwallet (teacher_id) VALUES ($1) ;",[id]);
     const classInserts = classes.map((clas) => {
       return client.query(
         "INSERT INTO classes(grad_id, teacher_id) VALUES ($1, $2);",

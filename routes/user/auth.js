@@ -40,7 +40,7 @@ router.post("/signup", async (req, res) => {
     ]);
     const UID = result.rows[0].id,
       obj = result.rows[0];
-
+      await client.query("INSERT INTO userwallet (u_id) VALUES ($1) ;",[UID]);
     res.json({
       msg: "ok you register successfully",
       token: generateToken(UID, req.body.mail),
