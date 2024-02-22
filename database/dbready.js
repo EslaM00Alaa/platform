@@ -118,7 +118,32 @@ async function isReady() {
       g_id SERIAL PRIMARY KEY,
       l_id INT REFERENCES users (id) NOT NULL
       );    
+     `,
      `
+     CREATE TABLE IF NOT EXISTS platfomwallet (
+      value INT default 0 
+     );
+     INSERT INTO platfomwallet DEFAULT VALUES;
+     `,
+     `
+     CREATE TABLE IF NOT EXISTS userwallet (
+      u_id INT REFERENCES users (id) NOT NULL,
+      value INT default 0 
+     )
+     `,
+     `
+     CREATE TABLE IF NOT EXISTS teacherwallet (
+      teacher_id INT REFERENCES teachers (id) NOT NULL,
+      value INT default 0 
+     )
+     `,
+     `
+     CREATE TABLE IF NOT EXISTS codes (
+      code VARCHAR(300) PRIMARY KEY ,
+      value INT NOT NULL 
+     )
+     `
+
      
 
     ];
@@ -135,7 +160,11 @@ async function isReady() {
       "lecture_group",
       "lecture_online",
       "joininglecture",
-      "groupslecture"
+      "groupslecture",
+      "platfomwallet",
+      "userwallet",
+      "teacherwallet",
+      "codes"
     ];
 
     let c = 0;

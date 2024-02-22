@@ -30,7 +30,7 @@ app.use('/api/teacher',require("./routes/teacher/login"))
 app.use('/api/groups',require("./routes/groups/group"))
 app.use('/api/classes',require("./routes/classes/classesTeacher"))
 app.use('/api/lecture',require("./routes/lectures/lecture"))
-
+app.use('/api/code',require("./routes/admin/mange"))
 
 
 
