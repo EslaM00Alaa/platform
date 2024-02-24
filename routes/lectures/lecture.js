@@ -308,8 +308,9 @@ router.post("/exam", isTeacher, async (req, res) => {
     const result = await client.query("INSERT INTO exams (name, number) VALUES ($1, $2) RETURNING id;", [name, number]);
     const examId = result.rows[0].id;
 
-    
+    if(lo_id)
     await client.query("UPDATE lecture_online SET exam_id = $1 WHERE id = $2;" , [examId, lo_id]);
+    if(lg_id)
     await client.query("UPDATE lecture_group SET exam_id = $1 WHERE id = $2;" , [examId, lg_id]);
 
     // Commit the transaction

@@ -2,7 +2,7 @@ const
      express = require('express') ,
      client = require("../../database/db"),
      isAdmin = require("../../middleware/isAdmin"),
-     generateRandomString=require("../../utils/createcode");
+     generateRandomString=require("../../utils/createcode"),
      router =express.Router();
 
 
@@ -41,6 +41,38 @@ const
             const result = (await client.query("SELECT * FROM platfomwallet ;")).rows[0]
             console.log(result);
             res.json(result);
+        } catch (error) {
+            return res.status(404).json({ msg: error.message });
+        }
+    })
+
+
+
+    router.get("/mange",isAdmin,async(req,res)=>{
+        try {
+            const teachersData = await client.query(`
+            SELECT 
+                t.name AS teacher_name, 
+                t.mail AS teacher_mail, 
+                tw.value AS teacher_wallet_value, 
+                COUNT(lo.id) AS nOnline, 
+                COUNT(g.id) AS nGroup
+            FROM 
+                teachers t
+            LEFT JOIN 
+                lecture_online lo ON t.id = lo.teacher_id
+            LEFT JOIN 
+                groups g ON t.id = g.teacher_id
+            LEFT JOIN 
+                teacherwallet tw ON t.id = tw.teacher_id
+            WHERE 
+                t.id IS NOT NULL
+            GROUP BY 
+                t.id, tw.value;
+        `);
+        
+        const teachers = teachersData.rows;
+              res.json(teachers);
         } catch (error) {
             return res.status(404).json({ msg: error.message });
         }

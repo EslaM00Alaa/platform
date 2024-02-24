@@ -5,8 +5,8 @@ const joi = require("joi");
 function validateExam(obj)
 {
     const schema = joi.object({
-      lo_id :joi.number().required(),
-      lg_id :joi.number().required(),
+      lo_id :joi.number(),
+      lg_id :joi.number(),
       teacher_id :joi.number().required(),
       name:joi.string().required(),
       number:joi.number().required()
