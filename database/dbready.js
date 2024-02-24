@@ -167,7 +167,20 @@ async function isReady() {
         cover VARCHAR(255) REFERENCES covers (image_id) ON DELETE CASCADE
       );
       `,
-      ``
+      `
+      CREATE TABLE IF NOT EXISTS examssresult (
+        u_id INT REFERENCES users (id) NOT NULL,
+        exam_id INT REFERENCES exams (id) NOT NULL,
+        result INT NOT NULL
+      );
+      `,
+      `
+      CREATE TABLE IF NOT EXISTS examforuser  (
+        u_id INT REFERENCES users (id) NOT NULL,
+        exam_id INT REFERENCES exams (id) NOT NULL,
+        q_id INT REFERENCES questiones (id) NOT NULL
+      );
+      `
     ];
 
     const tablesToCheck = [
@@ -188,7 +201,9 @@ async function isReady() {
       "userwallet",
       "teacherwallet",
       "codes",
-      "questiones"
+      "questiones",
+      "examssresult",
+      "examforuser"
     ];
 
     let c = 0;

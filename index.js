@@ -33,6 +33,8 @@ app.use('/api/classes',require("./routes/classes/classesTeacher"))
 app.use('/api/lecture',require("./routes/lectures/lecture"))
 app.use('/api/code',require("./routes/admin/mange"))
 app.use('/api/user',require("./routes/user/code"))
+app.use('/api/user',require("./routes/user/exam/exam"))
+
 
 
 

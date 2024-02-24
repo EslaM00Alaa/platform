@@ -324,8 +324,18 @@ router.post("/exam", isTeacher, async (req, res) => {
   }
 });
 
+router.get("/exams", isTeacher, async (req, res) => {
+  try {
+    let result = await client.query("SELECT DISTINCT e.id, e.name FROM exams e LEFT JOIN lecture_group lg ON lg.exam_id = e.id LEFT JOIN lecture_online lo ON lo.exam_id = e.id WHERE lg.teacher_id = $1 AND lo.teacher_id = $2 ;", [req.body.teacher_id, req.body.teacher_id]);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ msg: "Internal server error." });
+  }
+});
+
+
 // get exam 
-router.get("/exam/:id/:qid", async (req, res) => {
+router.get("/exam/:id/:qid",isTeacher,async (req, res) => {
   try {
     let exam_id = req.params.id;
     let limit = 1;
