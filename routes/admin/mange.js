@@ -78,4 +78,15 @@ const
         }
     })
 
+    router.put("/zeroall", isAdmin, async (req, res) => {
+        try {
+            await client.query("UPDATE teacherwallet SET value = 0;");
+            res.json({ msg: "Done" });
+        } catch (error) {
+            console.error("Error in updating teacherwallet:", error);
+            return res.status(500).json({ msg: "Internal server error" });
+        }
+    });
+    
+
 module.exports = router;
