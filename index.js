@@ -51,7 +51,9 @@ app.use('/api/user',require("./routes/user/code"))
 //   } catch (error) {
 //     res.status(500).json({ msg: error.message });
 //   }
-// });
+// });   
+
+
 
 client.connect().then(async() => {
   console.log("psql is connected ..");

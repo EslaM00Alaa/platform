@@ -87,12 +87,20 @@ async function isReady() {
       );
       `,
       `
+      CREATE TABLE IF NOT EXISTS exams (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        number INT NOT NULL
+      );
+      `,
+      `
       CREATE TABLE IF NOT EXISTS lecture_group (
         id SERIAL PRIMARY KEY,
         teacher_id INT REFERENCES teachers (id) NOT NULL,
         cover VARCHAR(255) REFERENCES covers (image_id) NOT NULL,
         description VARCHAR(255) NOT NULL,
-        grad_id INT REFERENCES grades (id) NOT NULL
+        grad_id INT REFERENCES grades (id) NOT NULL,
+        exam_id INT REFERENCES exams (id)
       );
       `,
       `
@@ -102,50 +110,64 @@ async function isReady() {
         cover VARCHAR(255) REFERENCES covers (image_id) NOT NULL,
         description VARCHAR(255) NOT NULL,
         grad_id INT REFERENCES grades (id) NOT NULL,
-        price INT NOT NULL
+        price INT NOT NULL,
+        exam_id INT REFERENCES exams (id)
       );
       `,
       `
-        CREATE TABLE IF NOT EXISTS joininglecture (
+      CREATE TABLE IF NOT EXISTS joininglecture (
         id SERIAL PRIMARY KEY,
         u_id INT REFERENCES users (id) NOT NULL,
         lgroup_id INT REFERENCES lecture_group (id),
         lonline_id INT REFERENCES lecture_online (id)
-    );    
-     `,
-     `
-     CREATE TABLE IF NOT EXISTS groupslecture (
-      g_id SERIAL PRIMARY KEY,
-      l_id INT REFERENCES users (id) NOT NULL
-      );    
-     `,
-     `
-     CREATE TABLE IF NOT EXISTS platfomwallet (
-      value INT default 0 
-     );
-     INSERT INTO platfomwallet DEFAULT VALUES;
-     `,
-     `
-     CREATE TABLE IF NOT EXISTS userwallet (
-      u_id INT REFERENCES users (id) NOT NULL,
-      value INT default 0 
-     )
-     `,
-     `
-     CREATE TABLE IF NOT EXISTS teacherwallet (
-      teacher_id INT REFERENCES teachers (id) NOT NULL,
-      value INT default 0 
-     )
-     `,
-     `
-     CREATE TABLE IF NOT EXISTS codes (
-      code VARCHAR(300) PRIMARY KEY ,
-      value INT NOT NULL 
-     )
-     `
-
-     
-
+      );
+      `,
+      `
+      CREATE TABLE IF NOT EXISTS groupslecture (
+        g_id SERIAL PRIMARY KEY,
+        l_id INT REFERENCES lecture_group (id) NOT NULL
+      );
+      `,
+      `
+      CREATE TABLE IF NOT EXISTS platformwallet (
+        value INT DEFAULT 0 
+      );
+      
+      INSERT INTO platformwallet DEFAULT VALUES;
+      `,
+      `
+      CREATE TABLE IF NOT EXISTS userwallet (
+        u_id INT REFERENCES users (id) NOT NULL,
+        value INT DEFAULT 0 
+      );
+      `,
+      `
+      CREATE TABLE IF NOT EXISTS teacherwallet (
+        teacher_id INT REFERENCES teachers (id) NOT NULL,
+        value INT DEFAULT 0 
+      );
+      `,
+      `
+      CREATE TABLE IF NOT EXISTS codes (
+        code VARCHAR(300) PRIMARY KEY,
+        value INT NOT NULL 
+      );
+      `,
+      `
+      CREATE TABLE IF NOT EXISTS questiones (
+        id SERIAL PRIMARY KEY,
+        exam_id INT REFERENCES exams (id) NOT NULL,
+        question VARCHAR(1000) NOT NULL,
+        answer1 VARCHAR(1000) NOT NULL,
+        answer2 VARCHAR(1000) NOT NULL,
+        answer3 VARCHAR(1000) NOT NULL,
+        answer4 VARCHAR(1000) NOT NULL,
+        correctAnswer VARCHAR(1000) NOT NULL,
+        degree INT NOT NULL,
+        cover VARCHAR(255) REFERENCES covers (image_id) ON DELETE CASCADE
+      );
+      `,
+      ``
     ];
 
     const tablesToCheck = [
@@ -157,14 +179,16 @@ async function isReady() {
       "classes",
       "groups",
       "joingroup",
+      "exams",
       "lecture_group",
       "lecture_online",
       "joininglecture",
       "groupslecture",
-      "platfomwallet",
+      "platformwallet",
       "userwallet",
       "teacherwallet",
-      "codes"
+      "codes",
+      "questiones"
     ];
 
     let c = 0;
@@ -181,7 +205,7 @@ async function isReady() {
 
     console.log(`${c} tables created successfully!`);
   } catch (error) {
-    console.error('Error occurred:', error);
+    console.error("Error occurred:", error);
   }
 }
 

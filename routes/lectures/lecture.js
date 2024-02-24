@@ -1,3 +1,4 @@
+const {validateExam,validateQuestion} = require("../../models/exam");
 const photoUpload = require("../../utils/uploadimage");
 const { cloadinaryUploadImage , cloadinaryRemoveImage } = require("../../utils/uploadimageCdn");
 
@@ -193,7 +194,7 @@ router.get("/group/:id", isTeacher, async (req, res) => {
 
 
 // router.delete("/group/:lid", isTeacher, async (req, res) => {
-//   const client = await pool.connect(); // Assuming you're using a database connection pool
+
 
 //   try {
 //       const teacherId = req.body.teacher_id;
@@ -251,7 +252,6 @@ router.get("/online/:grad_id", isTeacher, async (req, res) => {
 
 
 // router.delete("/online/:lid", isTeacher, async (req, res) => {
-//   const client = await pool.connect(); // Assuming you're using a database connection pool
 
 //   try {
 //       const teacherId = req.body.teacher_id;
@@ -292,19 +292,122 @@ router.get("/online/:grad_id", isTeacher, async (req, res) => {
 // });
 
 
+router.post("/exam", isTeacher, async (req, res) => {
+  try {
+    const { error } = validateExam(req.body);
+    if (error) {
+      return res.status(400).json({ msg: error.details[0].message }); // Changed status code to 400 for bad request
+    }
+
+    const { lo_id, name, number, lg_id } = req.body;
+
+    // Start a database transaction
+    await client.query("BEGIN");
+
+    // Insert new exam
+    const result = await client.query("INSERT INTO exams (name, number) VALUES ($1, $2) RETURNING id;", [name, number]);
+    const examId = result.rows[0].id;
+
+    
+    await client.query("UPDATE lecture_online SET exam_id = $1 WHERE id = $2;" , [examId, lo_id]);
+    await client.query("UPDATE lecture_group SET exam_id = $1 WHERE id = $2;" , [examId, lg_id]);
+
+    // Commit the transaction
+    await client.query("COMMIT");
+
+    res.json({ msg: "Exam created and associated with lecture successfully",examId });
+  } catch (error) {
+    // Rollback the transaction in case of error
+    await client.query("ROLLBACK");
+    console.error("Error creating exam:", error);
+    res.status(500).json({ msg: "Internal server error." });
+  }
+});
+
+// get exam 
+router.get("/exam/:id/:qid", async (req, res) => {
+  try {
+    let exam_id = req.params.id;
+    let limit = 1;
+    let skip = (+req.params.qid - 1) * limit;
+
+    // Corrected SQL query syntax and added alias for q.exam_id
+    let result = await client.query("SELECT q.id, q.exam_id AS exam_id, q.question, q.answer1, q.answer2, q.answer3, q.answer4, q.degree, c.image FROM questiones q left JOIN covers c ON c.image_id = q.cover WHERE q.exam_id = $1 LIMIT $2 OFFSET $3;", [exam_id, limit, skip]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ msg: "No questions found for the provided exam ID and question ID." });
+    }
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching exam questions:", error);
+    res.status(500).json({ msg: "Internal server error." });
+  }
+});
 
 
+// questiones  
+router.post("/question", photoUpload.single("image"), isTeacher, async (req, res) => {
+  try {
+    const { error } = validateQuestion(req.body);
+    if (error) return res.status(400).json({ msg: error.details[0].message });
 
+    let {
+      exam_id,
+      question,
+      answer1,
+      answer2,
+      answer3,
+      answer4,
+      correctAnswer,
+      degree
+    } = req.body;
 
+    let public_id, secure_url;
 
+    // If an image is uploaded
+    if (req.file) {
+      const imagePath = path.join(__dirname, `../../images/${req.file.filename}`);
+      const uploadResult = await cloudinaryUploadImage(imagePath);
+      public_id = uploadResult.public_id;
+      secure_url = uploadResult.secure_url;
+    }
 
+    await client.query("BEGIN"); // Start a database transaction
 
+    // Insert the image into the covers table
+    if (public_id && secure_url) {
+      await client.query("INSERT INTO covers(image_id, image) VALUES ($1, $2);", [public_id, secure_url]);
+    }
 
+    // Insert the question into the questiones table
+    await client.query("INSERT INTO questiones (exam_id, question, answer1, answer2, answer3, answer4, correctAnswer, degree, cover) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);", [exam_id, question, answer1, answer2, answer3, answer4, correctAnswer, degree, public_id]);
 
+    await client.query("COMMIT"); // Commit the transaction
 
+    res.json({ msg: "Question added successfully" });
+  } catch (error) {
+    await client.query("ROLLBACK"); // Rollback the transaction in case of error
+    console.error("Error adding question:", error);
+    res.status(500).json({ msg: "Internal server error." });
+  }
+});
 
+router.delete("/question/:id", isTeacher, async (req, res) => {
+  try {
+    const qid = req.params.id; // Corrected accessing parameter from URL
+    const result = await client.query("DELETE FROM questiones WHERE id = $1 RETURNING cover;", [qid]);
+   
+    if (result.rows.length > 0 && result.rows[0].cover) { // Check if 'cover' exists
+      await cloudinaryRemoveImage(result.rows[0].cover); // Corrected function name
+    }
 
-
+    res.json({ msg: "One question deleted" }); // Corrected response method
+  } catch (error) {
+    console.error("Error deleting question:", error);
+    res.status(500).json({ msg: "Internal server error." });
+  }
+});
 
 
 
@@ -343,6 +446,16 @@ router.delete("/online/:id", isTeacher, async (req, res) => {
       return res.status(404).json({ msg: "Lecture not found or unauthorized to delete" });
     }
 
+    // Check if there are any associated records in the joininglecture table
+    const joiningLectureCheckQuery = "SELECT * FROM joininglecture WHERE lonline_id = $1";
+    const joiningLectureCheckResult = await client.query(joiningLectureCheckQuery, [lectureId]);
+
+    if (joiningLectureCheckResult.rows.length > 0) {
+      // If there are associated records, delete them first
+      const deleteJoiningLectureQuery = "DELETE FROM joininglecture WHERE lonline_id = $1";
+      await client.query(deleteJoiningLectureQuery, [lectureId]);
+    }
+
     // Retrieve the image ID associated with the lecture
     const imageIdQuery = "SELECT cover FROM lecture_online WHERE id = $1";
     const imageIdResult = await client.query(imageIdQuery, [lectureId]);
@@ -365,7 +478,6 @@ router.delete("/online/:id", isTeacher, async (req, res) => {
     await client.query("END"); // End the database transaction
   }
 });
-
 
 router.delete("/group/:id", isTeacher, async (req, res) => {
   try {
@@ -392,7 +504,7 @@ router.delete("/group/:id", isTeacher, async (req, res) => {
     await client.query(deleteQuery, [lectureId]);
 
     // Remove the image from Cloudinary
-    await cloadinaryRemoveImage(imageId);
+    await cloudinaryRemoveImage(imageId); // Corrected function call to cloudinaryRemoveImage
 
     await client.query("COMMIT"); // Commit the database transaction
 
