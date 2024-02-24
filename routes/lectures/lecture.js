@@ -301,6 +301,7 @@ router.post("/exam", isTeacher, async (req, res) => {
 
     const { lo_id, name, number, lg_id } = req.body;
 
+    console.log(lg_id+"   "+lo_id);
     // Start a database transaction
     await client.query("BEGIN");
 
@@ -309,10 +310,13 @@ router.post("/exam", isTeacher, async (req, res) => {
     const examId = result.rows[0].id;
 
     if(lo_id)
-    await client.query("UPDATE lecture_online SET exam_id = $1 WHERE id = $2;" , [examId, lo_id]);
+    {
+      await client.query("UPDATE lecture_online SET exam_id = $1 WHERE id = $2;" , [examId, lo_id]);
+    }
     if(lg_id)
+    {
     await client.query("UPDATE lecture_group SET exam_id = $1 WHERE id = $2;" , [examId, lg_id]);
-
+    }
     // Commit the transaction
     await client.query("COMMIT");
 

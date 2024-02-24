@@ -78,15 +78,18 @@ const
         }
     })
 
-    router.put("/zeroall", isAdmin, async (req, res) => {
+    router.put("/zero/:id", isAdmin, async (req, res) => {
         try {
-            await client.query("UPDATE teacherwallet SET value = 0;");
+            let id = req.params.id;
+            // Assuming 'client' is properly configured and connected to your database
+            await client.query("UPDATE teacherwallet SET value = 0 WHERE teacher_id = $1;", [id]);
             res.json({ msg: "Done" });
         } catch (error) {
             console.error("Error in updating teacherwallet:", error);
             return res.status(500).json({ msg: "Internal server error" });
         }
     });
+    
     
 
 module.exports = router;
