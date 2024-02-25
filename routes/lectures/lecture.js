@@ -301,7 +301,6 @@ router.post("/exam", isTeacher, async (req, res) => {
 
     const { lo_id, name, number, lg_id } = req.body;
 
-    console.log(lg_id+"   "+lo_id);
     // Start a database transaction
     await client.query("BEGIN");
 

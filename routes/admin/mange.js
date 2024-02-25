@@ -53,14 +53,17 @@ const
             const teachersData = await client.query(`
             SELECT 
                 t.name AS teacher_name, 
+                t.id AS teacher_id, 
                 t.mail AS teacher_mail, 
                 tw.value AS teacher_wallet_value, 
-                COUNT(lo.id) AS nOnline, 
+                COUNT(jl.id) AS nOnline, 
                 COUNT(g.id) AS nGroup
             FROM 
                 teachers t
             LEFT JOIN 
                 lecture_online lo ON t.id = lo.teacher_id
+            LEFT JOIN 
+            joininglecture jl ON jl.lonline_id = lo.id
             LEFT JOIN 
                 groups g ON t.id = g.teacher_id
             LEFT JOIN 
