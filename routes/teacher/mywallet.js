@@ -9,7 +9,7 @@ router.get("/", isTeacher, async (req, res) => {
     const teachersData = await client.query(
       `
     SELECT
-    COALESCE(SUM(tw.value), 0) AS value,
+    tw.value AS value,
     COALESCE(COUNT(DISTINCT jl.id), 0) AS nOnline,
     COALESCE(COUNT(DISTINCT jg.std_id), 0) AS nGroup
 FROM
@@ -26,7 +26,7 @@ LEFT JOIN
     joingroup jg ON jg.group_id = g.id
     WHERE t.id = $1
 GROUP BY
-    t.id, t.name, t.mail;
+    t.id, t.name, t.mail,tw.value;
     `,
       [teacher_id]
     );

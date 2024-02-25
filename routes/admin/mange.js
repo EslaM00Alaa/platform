@@ -53,7 +53,7 @@ router.get("/mange", isAdmin, async (req, res) => {
       t.id,
       t.name,
       t.mail,
-      COALESCE(SUM(tw.value), 0) AS value,
+      tw.value AS value,
       COALESCE(COUNT(DISTINCT jl.id), 0) AS nOnline,
       COALESCE(COUNT(DISTINCT jg.std_id), 0) AS nGroup
   FROM
@@ -69,7 +69,7 @@ router.get("/mange", isAdmin, async (req, res) => {
   LEFT JOIN
       joingroup jg ON jg.group_id = g.id
   GROUP BY
-      t.id, t.name, t.mail;
+      t.id, t.name, t.mail,tw.value;
       `);
 
     res.json(teachersData.rows);
