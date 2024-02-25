@@ -382,7 +382,7 @@ router.post("/question", photoUpload.single("image"), isTeacher, async (req, res
     // If an image is uploaded
     if (req.file) {
       const imagePath = path.join(__dirname, `../../images/${req.file.filename}`);
-      const uploadResult = await cloudinaryUploadImage(imagePath);
+      const uploadResult = await cloadinaryUploadImage(imagePath);
       public_id = uploadResult.public_id;
       secure_url = uploadResult.secure_url;
     }
