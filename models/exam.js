@@ -24,7 +24,7 @@ function validateQuestion(obj)
       answer2:joi.string().required(),
       answer3:joi.string().required(),
       answer4:joi.string().required(),
-      correctAnswer:joi.string().required(),
+      correctAnswer:joi.number().required(),
       degree:joi.number().required(),
     })
     return schema.validate(obj)

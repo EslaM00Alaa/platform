@@ -395,14 +395,20 @@ router.post("/question", photoUpload.single("image"), isTeacher, async (req, res
       degree
     } = req.body;
 
-    let public_id, secure_url;
+    let public_id, secure_url, imagePath;
 
     // If an image is uploaded
     if (req.file) {
-      const imagePath = path.join(__dirname, `../../images/${req.file.filename}`);
+      imagePath = path.join(__dirname, `../../images/${req.file.filename}`);
       const uploadResult = await cloadinaryUploadImage(imagePath);
       public_id = uploadResult.public_id;
       secure_url = uploadResult.secure_url;
+
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error("Error deleting image:", err);
+        }})
+
     }
 
     await client.query("BEGIN"); // Start a database transaction
@@ -412,16 +418,24 @@ router.post("/question", photoUpload.single("image"), isTeacher, async (req, res
       await client.query("INSERT INTO covers(image_id, image) VALUES ($1, $2);", [public_id, secure_url]);
     }
 
+    let correctAns ;
+    switch(correctAnswer)
+    {
+      case 1 : correctAns=answer1;break;
+      case 2 : correctAns=answer2;break;
+      case 3 : correctAns=answer3;break;
+      case 4 : correctAns=answer4;break;
+      default : correctAns=""
+    }
+
+    if(!correctAnswer) return res.json({msg:"corect answer must be 1 or 2 or 3 or 4"});
+
     // Insert the question into the questiones table
-    await client.query("INSERT INTO questiones (exam_id, question, answer1, answer2, answer3, answer4, correctAnswer, degree, cover) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);", [exam_id, question, answer1, answer2, answer3, answer4, correctAnswer, degree, public_id]);
+    await client.query("INSERT INTO questiones (exam_id, question, answer1, answer2, answer3, answer4, correctAnswer, degree, cover) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);", [exam_id, question, answer1, answer2, answer3, answer4, correctAns, degree, public_id]);
 
     await client.query("COMMIT"); // Commit the transaction
 
     res.json({ msg: "Question added successfully" });
-    fs.unlink(imagePath, (err) => {
-      if (err) {
-        console.error("Error deleting image:", err);
-      }})
   } catch (error) {
     await client.query("ROLLBACK"); // Rollback the transaction in case of error
     console.error("Error adding question:", error);
