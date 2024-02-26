@@ -118,8 +118,8 @@ async function isReady() {
       CREATE TABLE IF NOT EXISTS joininglecture (
         id SERIAL PRIMARY KEY,
         u_id INT REFERENCES users (id) NOT NULL,
-        lgroup_id INT REFERENCES lecture_group (id),
-        lonline_id INT REFERENCES lecture_online (id)
+        lgroup_id INT REFERENCES lecture_group (id) ON DELETE CASCADE,
+        lonline_id INT REFERENCES lecture_online (id) ON DELETE CASCADE
       );
       `,
       `

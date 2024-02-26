@@ -494,10 +494,10 @@ router.delete("/online/:id", isTeacher, async (req, res) => {
 });
 
 router.delete("/group/:id", isTeacher, async (req, res) => {
-  try {
-    const lectureId = req.params.id;
-    const teacherId = req.body.teacher_id;
+  const lectureId = req.params.id;
+  const teacherId = req.body.teacher_id; // Assuming teacher_id is accessible through req.user
 
+  try {
     await client.query("BEGIN"); // Start a database transaction
 
     // Check if the lecture exists and is associated with the teacher
@@ -505,6 +505,7 @@ router.delete("/group/:id", isTeacher, async (req, res) => {
     const checkResult = await client.query(checkQuery, [lectureId, teacherId]);
 
     if (checkResult.rows.length === 0) {
+      await client.query("ROLLBACK"); // Rollback the transaction
       return res.status(404).json({ msg: "Lecture not found or unauthorized to delete" });
     }
 
@@ -518,20 +519,19 @@ router.delete("/group/:id", isTeacher, async (req, res) => {
     await client.query(deleteQuery, [lectureId]);
 
     // Remove the image from Cloudinary
-    await cloudinaryRemoveImage(imageId); // Corrected function call to cloudinaryRemoveImage
+    await cloadinaryRemoveImage(imageId);
 
-    await client.query("COMMIT"); // Commit the database transaction
+    await client.query("COMMIT"); // Commit the transaction
 
     res.json({ msg: "The lecture and associated image have been deleted" });
   } catch (error) {
-    await client.query("ROLLBACK"); // Rollback the database transaction in case of an error
-    res.status(500).json({ msg: error.message });
+    await client.query("ROLLBACK"); // Rollback the transaction in case of an error
+    console.error("Error deleting lecture:", error);
+    res.status(500).json({ msg: "Internal server error" });
   } finally {
-    await client.query("END"); // End the database transaction
+    await client.query("END"); // End the transaction
   }
 });
-
-
 
 
 module.exports = router;
