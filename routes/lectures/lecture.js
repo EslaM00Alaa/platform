@@ -327,26 +327,32 @@ router.post("/exam", isTeacher, async (req, res) => {
     res.status(500).json({ msg: "Internal server error." });
   }
 });
-router.get("/exams", isTeacher, async (req, res) => {
+
+router.get("/exams/:gradId", isTeacher, async (req, res) => {
   try {
+    let grad_id = req.params.gradId;
+    let teacher_id = req.body.teacher_id; // Assuming teacher_id is accessible through req.user
+
     let result = await client.query(`
       SELECT DISTINCT id, name FROM (
           SELECT e.id, e.name 
           FROM exams e 
           LEFT JOIN lecture_group lg ON lg.exam_id = e.id 
-          WHERE lg.teacher_id = $1 
+          WHERE lg.teacher_id = $1 AND lg.grad_id = $2
           UNION 
           SELECT e.id, e.name 
           FROM exams e 
           LEFT JOIN lecture_online lo ON lo.exam_id = e.id 
-          WHERE lo.teacher_id = $2
+          WHERE lo.teacher_id = $3 AND lo.grad_id = $4 
       ) AS combined_exams;
-    `, [req.body.teacher_id, req.body.teacher_id]); // Assuming teacher_id is accessible through req.user
+    `, [teacher_id, grad_id, teacher_id, grad_id]);
+    
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ msg: "Internal server error." });
   }
 });
+
 
 
 
