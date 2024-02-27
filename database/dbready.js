@@ -180,7 +180,23 @@ async function isReady() {
         exam_id INT REFERENCES exams (id) NOT NULL,
         q_id INT REFERENCES questiones (id) NOT NULL
       );
+      `,
       `
+      CREATE TABLE IF NOT EXISTS videos (
+        id VARCHAR(255) PRIMARY KEY,
+        video VARCHAR(1000) NOT NULL,
+        v_name VARCHAR(255) NOT NULL
+    );
+      `
+      ,
+      `
+      CREATE TABLE IF NOT EXISTS lecturevideos (
+        lo_id INT REFERENCES lecture_online (id),
+        lg_id INT REFERENCES lecture_group (id),
+        v_id VARCHAR(255) REFERENCES videos(id) NOT NULL
+    );
+      `
+
     ];
 
     const tablesToCheck = [
