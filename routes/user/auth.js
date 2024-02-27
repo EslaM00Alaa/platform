@@ -7,7 +7,9 @@ const express = require("express"),
     validateUser,
     validateLoginUser,
     validateEmail,
+    validateEmailU,
     validateChangePass,
+    validatePhone
   } = require("../../models/user"),
   generateToken = require("../../utils/UserToken"),
   nodemailer = require("nodemailer"),
@@ -50,6 +52,43 @@ router.post("/signup", async (req, res) => {
     return res.status(404).json({ msg: error.message });
   }
 });
+
+router.put("/edit/phone", isUser, async (req, res) => {
+  try {
+    const { user_id, phone } = req.body;
+    const { error } = validatePhone(req.body);
+
+    if (error) {
+      throw new Error(error.details[0].message);
+    }
+
+    await client.query("UPDATE users SET phone = $1 WHERE id = $2;", [phone, user_id]);
+    
+    res.json({ msg: "Phone number updated successfully" });
+  } catch (error) {
+    console.error("Error updating phone number:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
+router.put("/edit/mail", isUser, async (req, res) => {
+  try {
+    const { user_id, newmail } = req.body;
+    const { error } = validateEmailU(req.body);
+
+    if (error) {
+      throw new Error(error.details[0].message);
+    }
+
+    await client.query("UPDATE users SET mail = $1 WHERE id = $2;", [newmail, user_id]);
+    
+    res.json({ msg: "mail  updated successfully" });
+  } catch (error) {
+    console.error("Error updating phone number:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
 
 router.post("/login", async (req, res) => {
   try {
