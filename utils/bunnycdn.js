@@ -12,8 +12,7 @@ const bunny = new BunnyCDN.default({
   pullzone: process.env.BUNNY_NET_PULLZONE,
   accessKey: process.env.BUNNY_NET_ACCESS_KEY,
   storageZoneName: process.env.BUNNY_NET_STORAGEZONE_NAME,
-  storageZonePassword: process.env.BUNNY_NET_STORAGEZONE_PASSWORD,
-  storageZoneRegion: process.env.BUNNY_NET_STORAGEZONE_REGION
+  storageZonePassword: process.env.BUNNY_NET_STORAGEZONE_PASSWORD
 });
 
 // Create a Multer storage engine that streams the file to BunnyCDN
