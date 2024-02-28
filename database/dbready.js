@@ -182,18 +182,12 @@ async function isReady() {
       );
       `,
       `
-      CREATE TABLE IF NOT EXISTS videos (
-        id VARCHAR(255) PRIMARY KEY,
-        video VARCHAR(1000) NOT NULL,
-        v_name VARCHAR(255) NOT NULL
-    );
-      `
-      ,
-      `
       CREATE TABLE IF NOT EXISTS lecturevideos (
+        id SERIAL PRIMARY KEY,
         lo_id INT REFERENCES lecture_online (id),
         lg_id INT REFERENCES lecture_group (id),
-        v_id VARCHAR(255) REFERENCES videos(id) NOT NULL
+        video VARCHAR(1000) NOT NULL,
+        v_name VARCHAR(255) NOT NULL
     );
       `
 
@@ -219,7 +213,8 @@ async function isReady() {
       "codes",
       "questiones",
       "examssresult",
-      "examforuser"
+      "examforuser",
+      "lecturevideos"
     ];
 
     let c = 0;

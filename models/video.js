@@ -8,6 +8,7 @@ function validateVideo(obj) {
         lg_id :joi.number(),
         teacher_id :joi.number().required(),
         name:joi.string().required(),
+        video:joi.string().required()
     });
   
     return schema.validate(obj);

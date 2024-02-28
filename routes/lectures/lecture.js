@@ -13,11 +13,9 @@ const express = require("express"),
   isTeacher = require("../../middleware/isTeacher"),
   path = require("path"),
   fs = require("fs"),
-  { videoUpload, compressVideo } = require("../../utils/uploadVideo"),
-  { uploadVideo, deleteVideoById } = require("../../utils/bunnycdn.js");
-const router = require("../user/auth.js");
-const isUser = require("../../middleware/isUser.js");
-
+  router = express.Router();
+  const isUser = require("../../middleware/isUser.js");
+  
 
 router.post(
   "/add",
@@ -143,39 +141,19 @@ router.get("/online/:grad_id", isTeacher, async (req, res) => {
   }
 });
 
-router.post("/video", isTeacher, videoUpload, async (req, res) => {
+
+
+router.post("/video", isTeacher , async (req, res) => {
   try {
-    const { lo_id, lg_id, name } = req.body;
-    const videoUrl = await uploadVideo(req.file.path);
-
-    // Begin transaction
-    await client.query("BEGIN");
-
-    // Insert video metadata into the 'videos' table
+    
+    const { lo_id, lg_id, name , video } = req.body;  
     await client.query(
-      "INSERT INTO videos (id, video, v_name) VALUES ($1, $2, $3);",
-      [req.file.filename, videoUrl, name]
+      "INSERT INTO lecturevideos (lo_id, lg_id, video, v_name) VALUES ($1, $2, $3, $4);",
+      [lo_id, lg_id, video, name]
     );
 
-    // Insert IDs into the 'lecturevideos' table
-    await client.query(
-      "INSERT INTO lecturevideos (lo_id, lg_id, v_id) VALUES ($1, $2, $3);",
-      [lo_id, lg_id, req.file.filename]
-    );
-
-    // Commit transaction
-    await client.query("COMMIT");
-
-    // Remove the uploaded file from local storage
-    fs.unlinkSync(req.file.path);
-
-    res
-      .status(200)
-      .json({ message: "Video uploaded successfully", url: videoUrl });
+    res.status(200).json({ message: "Video uploaded successfully" });
   } catch (error) {
-    // Roll back transaction if an error occurs
-    await client.query("ROLLBACK");
-    console.error(error);
     res.status(500).json({ msg: error.message });
   }
 });
@@ -196,11 +174,12 @@ router.get("/lectureonline/:lo_id", isUser, async (req, res) => {
     }
 
     const lectureQuery = {
-      text: "SELECT lo.description, e.id, e.name, er.result, v.* FROM lecture_online lo JOIN exams e ON lo.exam_id = e.id LEFT JOIN examssresult er ON er.i_id = $1 AND er.exam_id = e.id JOIN lecturevideos lv ON lv.lo_id = lo.id JOIN videos v ON lv.v_id = v.id WHERE lo.id = $2",
-      values: [user_id, lo_id]
+      text: "SELECT lo.description, e.id, e.name, er.result, lv.* FROM lecture_online lo LEFT JOIN exams e ON lo.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id LEFT JOIN lecturevideos lv ON lv.lo_id = lo.id WHERE lo.id = $2",
+      values: [user_id, lo_id] // Corrected binding
     };
+    
     const lectureResult = await client.query(lectureQuery);
-
+    
     res.json(lectureResult.rows);
   } catch (error) {
     console.error("Error fetching lecture details:", error);
@@ -225,17 +204,20 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
     }
 
     const lectureQuery = {
-      text: "SELECT lg.description, e.id, e.name, er.result, v.* FROM lgroup_id lg JOIN exams e ON lg.exam_id = e.id LEFT JOIN examssresult er ON er.i_id = $1 AND er.exam_id = e.id JOIN lecturevideos lv ON lv.lg_id = lg.id JOIN videos v ON lv.v_id = v.id WHERE lg.id = $2",
-      values: [user_id, lg_id]
+      text: "SELECT lg.description, e.id, e.name, er.result, lv.* FROM lecture_group lg LEFT JOIN exams e ON lg.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id LEFT JOIN lecturevideos lv ON lv.lg_id = lg.id WHERE lg.id = $2",
+      values: [user_id, lg_id] // Corrected binding
     };
+    
     const lectureResult = await client.query(lectureQuery);
-
+    
     res.json(lectureResult.rows);
   } catch (error) {
     console.error("Error fetching lecture details:", error);
     res.status(500).json({ msg: "Internal server error" });
   }
 });
+
+
 
 
 
@@ -406,7 +388,7 @@ router.post(
           correctAns = "";
       }
 
-      if (!correctAnswer)
+      if (!correctAns)
         return res.json({ msg: "corect answer must be 1 or 2 or 3 or 4" });
 
       // Insert the question into the questiones table
