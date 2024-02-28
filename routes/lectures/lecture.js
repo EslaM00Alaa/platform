@@ -174,13 +174,15 @@ router.get("/lectureonline/:lo_id", isUser, async (req, res) => {
     }
 
     const lectureQuery = {
-      text: "SELECT lo.description, e.id, e.name, er.result, lv.* FROM lecture_online lo LEFT JOIN exams e ON lo.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id LEFT JOIN lecturevideos lv ON lv.lo_id = lo.id WHERE lo.id = $2",
-      values: [user_id, lo_id] // Corrected binding
+      text: "SELECT lo.description, e.id, e.name, er.result, FROM lecture_online lo LEFT JOIN exams e ON lo.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id ;",
+      values: [user_id] // Corrected binding
     };
-    
     const lectureResult = await client.query(lectureQuery);
+   
+    let videos = await client.query("SELECT ")
+
     
-    res.json(lectureResult.rows);
+    res.json(lectureResult.rows[0]);
   } catch (error) {
     console.error("Error fetching lecture details:", error);
     res.status(500).json({ msg: "Internal server error" });
@@ -388,7 +390,7 @@ router.post(
           correctAns = "";
       }
 
-      if (!correctAns)
+      if (correctAns.length==0)
         return res.json({ msg: "corect answer must be 1 or 2 or 3 or 4" });
 
       // Insert the question into the questiones table
