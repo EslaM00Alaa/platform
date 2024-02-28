@@ -174,13 +174,14 @@ router.get("/lectureonline/:lo_id", isUser, async (req, res) => {
     }
 
     const lectureQuery = {
-      text: "SELECT lo.description, e.id, e.name, er.result, FROM lecture_online lo LEFT JOIN exams e ON lo.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id ;",
-      values: [user_id] // Corrected binding
+      text: "SELECT lo.description, e.id AS exam_id, e.name AS exam_name , er.result AS last_result  FROM lecture_online lo LEFT JOIN exams e ON lo.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id WHERE lo.id = $2",
+      values: [user_id, lo_id]
     };
     const lectureResult = await client.query(lectureQuery);
    
-    let videos = await client.query("SELECT ")
+    let videos = await client.query("SELECT video, v_name FROM lecturevideos WHERE lo_id = $1", [lo_id]);
 
+    lectureResult.rows[0].videos = videos.rows;
     
     res.json(lectureResult.rows[0]);
   } catch (error) {
@@ -188,15 +189,13 @@ router.get("/lectureonline/:lo_id", isUser, async (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 });
-
-
 router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
   try {
-    const { lg_id } = req.params;
+    const { lg_id } = req.params; // Corrected variable name from lo_id to lg_id
     const { user_id } = req.body;
 
     const permissionCheckQuery = {
-      text: "SELECT * FROM joininglecture WHERE u_id = $1 AND lgroup_id = $2",
+      text: "SELECT * FROM joininglecture WHERE u_id = $1 AND lgroup_id = $2", // Corrected lonline_id to lgroup_id
       values: [user_id, lg_id]
     };
     const permissionResult = await client.query(permissionCheckQuery);
@@ -206,19 +205,21 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
     }
 
     const lectureQuery = {
-      text: "SELECT lg.description, e.id, e.name, er.result, lv.* FROM lecture_group lg LEFT JOIN exams e ON lg.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id LEFT JOIN lecturevideos lv ON lv.lg_id = lg.id WHERE lg.id = $2",
-      values: [user_id, lg_id] // Corrected binding
+      text: "SELECT lg.description, e.id AS exam_id, e.name AS exam_name, er.result AS last_result FROM lecture_group lg LEFT JOIN exams e ON lg.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id WHERE lg.id = $2",
+      values: [user_id, lg_id]
     };
-    
     const lectureResult = await client.query(lectureQuery);
+   
+    let videos = await client.query("SELECT video, v_name FROM lecturevideos WHERE lg_id = $1", [lg_id]); // Corrected lo_id to lg_id
+
+    lectureResult.rows[0].videos = videos.rows;
     
-    res.json(lectureResult.rows);
+    res.json(lectureResult.rows[0]);
   } catch (error) {
     console.error("Error fetching lecture details:", error);
     res.status(500).json({ msg: "Internal server error" });
   }
 });
-
 
 
 
