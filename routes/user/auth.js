@@ -43,6 +43,7 @@ router.post("/signup", async (req, res) => {
     const UID = result.rows[0].id,
       obj = result.rows[0];
       await client.query("INSERT INTO userwallet (u_id) VALUES ($1) ;",[UID]);
+      await client.query("INSERT INTO usersip (ip,u_id) VALUES($1,$2) ;",[req.ip,UID]);
     res.json({
       msg: "ok you register successfully",
       token: generateToken(UID, req.body.mail),
@@ -89,33 +90,55 @@ router.put("/edit/mail", isUser, async (req, res) => {
   }
 });
 
-
 router.post("/login", async (req, res) => {
   try {
     const { error } = validateLoginUser(req.body);
-    if (error) return res.status(404).json({ msg: error.details[0].message });
+    if (error) return res.status(400).json({ msg: error.details[0].message });
 
     let sqlQuery = `SELECT * FROM users WHERE mail = $1 `;
     let result = await client.query(sqlQuery, [req.body.mail]);
+
     if (result.rows.length > 0) {
-      const { pass, verify_code, ...obj } = result.rows[0];
-      let isPasswordMatch = await bcrypt.compare(
-        req.body.pass,
-        result.rows[0].pass
-      );
-      if (isPasswordMatch)
+      let uid = result.rows[0].id;
+      let userIpQuery = await client.query("SELECT ip FROM usersip WHERE u_id = $1 ;", [uid]);
+      
+      if (userIpQuery.rows.length > 0) {
+        let user_ip = userIpQuery.rows[0].ip;
+          console.log(user_ip+"     "+req.ip);
+        if (user_ip !== req.ip) {
+          if (user_ip === 'sata') {
+            console.log("change");
+            await client.query("UPDATE usersip SET ip = $1 WHERE u_id = $2;", [req.ip, uid]);
+          } else {
+            return res.status(400).json({ msg: "You must login from the same device" });
+          }
+          
+        }
+      } 
+      else {
+        await client.query("INSERT INTO usersip (ip, u_id) VALUES ($1, $2) ;", [req.ip, uid]);
+      }
+      
+      const isPasswordMatch = await bcrypt.compare(req.body.pass, result.rows[0].pass);
+      
+      if (isPasswordMatch) {
+        const { pass, verify_code, ...userData } = result.rows[0];
         return res.json({
           token: generateToken(result.rows[0].id, result.rows[0].mail),
-          Data: obj,
+          data: userData,
         });
-      else return res.status(404).json({ msg: "USER NAME OR PASSWOR INVLID" });
+      } else {
+        return res.status(400).json({ msg: "Invalid username or password" });
+      }
     } else {
-      return res.status(404).json({ msg: "USER NAME OR PASSWOR INVLID" });
+      return res.status(400).json({ msg: "Invalid username or password" });
     }
   } catch (error) {
-    return res.status(404).json({ msg: error.message });
+    console.error("Error:", error);
+    return res.status(500).json({ msg: "Internal server error" });
   }
 });
+
 
 router.post("/verifycode", async (req, res) => {
   try {

@@ -15,6 +15,7 @@ const express = require("express"),
   fs = require("fs"),
   router = express.Router();
   const isUser = require("../../middleware/isUser.js");
+const video = require("fluent-ffmpeg/lib/options/video.js");
   
 
 router.post(
@@ -179,7 +180,7 @@ router.get("/lectureonline/:lo_id", isUser, async (req, res) => {
     };
     const lectureResult = await client.query(lectureQuery);
    
-    let videos = await client.query("SELECT video, v_name FROM lecturevideos WHERE lo_id = $1", [lo_id]);
+    let videos = await client.query("SELECT id, v_name FROM lecturevideos WHERE lo_id = $1", [lo_id]);
 
     lectureResult.rows[0].videos = videos.rows;
     
@@ -210,7 +211,7 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
     };
     const lectureResult = await client.query(lectureQuery);
    
-    let videos = await client.query("SELECT video, v_name FROM lecturevideos WHERE lg_id = $1", [lg_id]); // Corrected lo_id to lg_id
+    let videos = await client.query("SELECT id, v_name FROM lecturevideos WHERE lg_id = $1", [lg_id]); // Corrected lo_id to lg_id
 
     lectureResult.rows[0].videos = videos.rows;
     
@@ -221,6 +222,29 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
   }
 });
 
+router.get("/video/:id", isUser, async (req, res) => {
+  try {
+    const { id: user_id } = req.params; // Assuming user ID is in params, not body
+
+    const query = `
+      SELECT lv.video
+      FROM lecturevideos lv
+      JOIN joininglecture jl ON jl.lgroup_id = lv.lg_id OR jl.lonline_id = lv.lo_id
+      WHERE jl.u_id = $1
+    `;
+
+    const { rows } = await client.query(query, [user_id]);
+
+    if (rows.length > 0) {
+      res.json({ video: rows[0].video });
+    } else {
+      res.status(404).json({ msg: "You can't access this video" });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
 
 
 

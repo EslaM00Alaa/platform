@@ -179,12 +179,14 @@ router.delete("/:id", isAdmin, async (req, res) => {
   try {
     const id = req.params.id;
 
-    let tec = await client.query("select * from teachers where id = $1  ;", [
-      id,
-    ]);
+    // Check if the teacher exists
+    let tec = await client.query("SELECT * FROM teachers WHERE id = $1;", [id]);
 
     if (tec.rows.length > 0) {
       await client.query("BEGIN"); // Start a database transaction
+
+      // Delete related records from the 'teacherwallet' table
+      await client.query("DELETE FROM teacherwallet WHERE teacher_id = $1", [id]);
 
       // Delete related records from the 'classes' table
       await client.query("DELETE FROM classes WHERE teacher_id = $1", [id]);
@@ -198,22 +200,24 @@ router.delete("/:id", isAdmin, async (req, res) => {
 
       // Delete the associated cover image if it exists
       if (image_id) {
-        await client.query("DELETE FROM covers WHERE image_id = $1", [
-          image_id,
-        ]);
+        await client.query("DELETE FROM covers WHERE image_id = $1", [image_id]);
         await cloadinaryRemoveImage(image_id);
       }
 
       await client.query("COMMIT"); // Commit the database transaction
 
       res.json({ msg: "Teacher deleted" });
-    } else return res.json({ msg: "not found" });
+    } else {
+      return res.json({ msg: "Teacher not found" });
+    }
   } catch (error) {
     await client.query("ROLLBACK"); // Rollback the database transaction in case of an error
-    res.status(404).json({ msg: error.message });
+    res.status(500).json({ msg: error.message });
   } finally {
     await client.query("END"); // End the database transaction
   }
 });
+
+
 
 module.exports = router;
