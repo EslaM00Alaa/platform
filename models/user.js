@@ -11,6 +11,7 @@ function validateUser(obj)
         pass:joi.string().trim().max(300).required(),
         lastVerifyCode:joi.string().trim(),
         phone:joi.string().trim(),
+        ip:joi.string().trim(),
         grad:joi.number(),
     })
     return schema.validate(obj)
@@ -32,7 +33,8 @@ function validateLoginUser(obj)
 {
     const schema = joi.object({
         mail:joi.string().trim().required(),
-        pass:joi.string().trim().max(100).required()
+        pass:joi.string().trim().max(100).required(),
+        ip:joi.string().trim()
     })
     return schema.validate(obj)
 }
