@@ -17,6 +17,7 @@ const express = require("express"),
 
 router.post("/signup", async (req, res) => {
   try {
+    console.log(req.body.ip);
     const { error } = validateUser(req.body);
     if (error) return res.status(404).json({ msg: error.details[0].message });
 
@@ -43,7 +44,7 @@ router.post("/signup", async (req, res) => {
     const UID = result.rows[0].id,
       obj = result.rows[0];
       await client.query("INSERT INTO userwallet (u_id) VALUES ($1) ;",[UID]);
-      await client.query("INSERT INTO usersip (ip,u_id) VALUES($1,$2) ;",[req.ip,UID]);
+      await client.query("INSERT INTO usersip (ip,u_id) VALUES($1,$2) ;",[req.body.ip,UID]);
     res.json({
       msg: "ok you register successfully",
       token: generateToken(UID, req.body.mail),
@@ -104,11 +105,11 @@ router.post("/login", async (req, res) => {
       
       if (userIpQuery.rows.length > 0) {
         let user_ip = userIpQuery.rows[0].ip;
-          console.log(user_ip+"     "+req.ip);
-        if (user_ip !== req.ip) {
+          console.log(user_ip+"     "+req.body.ip);
+        if (user_ip !== req.body.ip) {
           if (user_ip === 'sata') {
             console.log("change");
-            await client.query("UPDATE usersip SET ip = $1 WHERE u_id = $2;", [req.ip, uid]);
+            await client.query("UPDATE usersip SET ip = $1 WHERE u_id = $2;", [req.body.ip, uid]);
           } else {
             return res.status(400).json({ msg: "You must login from the same device" });
           }
@@ -116,7 +117,7 @@ router.post("/login", async (req, res) => {
         }
       } 
       else {
-        await client.query("INSERT INTO usersip (ip, u_id) VALUES ($1, $2) ;", [req.ip, uid]);
+        await client.query("INSERT INTO usersip (ip, u_id) VALUES ($1, $2) ;", [req.body.ip, uid]);
       }
       
       const isPasswordMatch = await bcrypt.compare(req.body.pass, result.rows[0].pass);

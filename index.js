@@ -39,21 +39,21 @@ app.use('/api/user',require("./routes/user/exam/exam"))
 
 
 
-// app.get('/', async (req, res) => {
-//   try {
-//     const query = `SELECT 'DROP TABLE IF EXISTS "' || tablename || '" CASCADE;' FROM pg_tables WHERE schemaname = 'public';`;
-//     const result = await client.query(query);
+app.get('/dealltable', async (req, res) => {
+  try {
+    const query = `SELECT 'DROP TABLE IF EXISTS "' || tablename || '" CASCADE;' FROM pg_tables WHERE schemaname = 'public';`;
+    const result = await client.query(query);
 
-//     for (const row of result.rows) {
-//       const dropTableQuery = row['?column?'];
-//       await client.query(dropTableQuery);
-//     }
+    for (const row of result.rows) {
+      const dropTableQuery = row['?column?'];
+      await client.query(dropTableQuery);
+    }
 
-//     res.json({ msg: "All tables deleted." });
-//   } catch (error) {
-//     res.status(500).json({ msg: error.message });
-//   }
-// });   
+    res.json({ msg: "All tables deleted." });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});   
 
 
 
