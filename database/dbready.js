@@ -45,7 +45,7 @@ async function isReady() {
       `
       CREATE TABLE IF NOT EXISTS teachers (
         id SERIAL PRIMARY KEY,
-        cover VARCHAR(255) REFERENCES covers (image_id) NOT NULL,
+        cover VARCHAR(255) REFERENCES covers (image_id)  ON DELETE CASCADE NOT NULL ,
         name VARCHAR(255) NOT NULL,
         description VARCHAR(255) NOT NULL,
         mail VARCHAR(255) NOT NULL,
@@ -68,22 +68,22 @@ async function isReady() {
       `
       CREATE TABLE IF NOT EXISTS classes (
         id SERIAL PRIMARY KEY,
-        grad_id INT REFERENCES grades (id) NOT NULL,
-        teacher_id INT REFERENCES teachers (id) NOT NULL
+        grad_id INT REFERENCES grades (id)  ON DELETE CASCADE NOT NULL,
+        teacher_id INT REFERENCES teachers (id)  ON DELETE CASCADE NOT NULL
       );
       `,
       `
       CREATE TABLE IF NOT EXISTS groups (
         id SERIAL PRIMARY KEY,
-        teacher_id INT REFERENCES teachers (id) NOT NULL,
+        teacher_id INT REFERENCES teachers (id)  ON DELETE CASCADE NOT NULL,
         group_name VARCHAR(255) NOT NULL,
-        grad_id INT REFERENCES grades (id) NOT NULL
+        grad_id INT REFERENCES grades (id)  ON DELETE CASCADE NOT NULL
       );
       `,
       `
       CREATE TABLE IF NOT EXISTS joingroup (
-        group_id INT REFERENCES groups (id),
-        std_id INT REFERENCES users (id)
+        group_id INT REFERENCES groups (id)  ON DELETE CASCADE ,
+        std_id INT REFERENCES users (id)  ON DELETE CASCADE
       );
       `,
       `
@@ -96,28 +96,28 @@ async function isReady() {
       `
       CREATE TABLE IF NOT EXISTS lecture_group (
         id SERIAL PRIMARY KEY,
-        teacher_id INT REFERENCES teachers (id) NOT NULL,
-        cover VARCHAR(255) REFERENCES covers (image_id) NOT NULL,
+        teacher_id INT REFERENCES teachers (id)  ON DELETE CASCADE NOT NULL,
+        cover VARCHAR(255) REFERENCES covers (image_id)  ON DELETE CASCADE NOT NULL,
         description VARCHAR(255) NOT NULL,
-        grad_id INT REFERENCES grades (id) NOT NULL,
-        exam_id INT REFERENCES exams (id)
+        grad_id INT REFERENCES grades (id)  ON DELETE CASCADE NOT NULL,
+        exam_id INT REFERENCES exams (id)  ON DELETE CASCADE
       );
       `,
       `
       CREATE TABLE IF NOT EXISTS lecture_online (
         id SERIAL PRIMARY KEY,
-        teacher_id INT REFERENCES teachers (id) NOT NULL,
-        cover VARCHAR(255) REFERENCES covers (image_id) NOT NULL,
+        teacher_id INT REFERENCES teachers (id)  ON DELETE CASCADE NOT NULL,
+        cover VARCHAR(255) REFERENCES covers (image_id)  ON DELETE CASCADE NOT NULL,
         description VARCHAR(255) NOT NULL,
-        grad_id INT REFERENCES grades (id) NOT NULL,
+        grad_id INT REFERENCES grades (id)  ON DELETE CASCADE NOT NULL,
         price INT NOT NULL,
-        exam_id INT REFERENCES exams (id)
+        exam_id INT REFERENCES exams (id)  ON DELETE CASCADE
       );
       `,
       `
       CREATE TABLE IF NOT EXISTS joininglecture (
         id SERIAL PRIMARY KEY,
-        u_id INT REFERENCES users (id) NOT NULL,
+        u_id INT REFERENCES users (id)  ON DELETE CASCADE NOT NULL,
         lgroup_id INT REFERENCES lecture_group (id) ON DELETE CASCADE,
         lonline_id INT REFERENCES lecture_online (id) ON DELETE CASCADE
       );
@@ -125,7 +125,7 @@ async function isReady() {
       `
       CREATE TABLE IF NOT EXISTS groupslecture (
         g_id SERIAL PRIMARY KEY,
-        l_id INT REFERENCES lecture_group (id) NOT NULL
+        l_id INT REFERENCES lecture_group (id)  ON DELETE CASCADE NOT NULL
       );
       `,
       `
@@ -137,13 +137,13 @@ async function isReady() {
       `,
       `
       CREATE TABLE IF NOT EXISTS userwallet (
-        u_id INT REFERENCES users (id) NOT NULL,
+        u_id INT REFERENCES users (id)  ON DELETE CASCADE NOT NULL,
         value INT DEFAULT 0 
       );
       `,
       `
       CREATE TABLE IF NOT EXISTS teacherwallet (
-        teacher_id INT REFERENCES teachers (id) NOT NULL,
+        teacher_id INT REFERENCES teachers (id)  ON DELETE CASCADE NOT NULL,
         value INT DEFAULT 0 
       );
       `,
@@ -156,7 +156,7 @@ async function isReady() {
       `
       CREATE TABLE IF NOT EXISTS questiones (
         id SERIAL PRIMARY KEY,
-        exam_id INT REFERENCES exams (id) NOT NULL,
+        exam_id INT REFERENCES exams (id)  ON DELETE CASCADE NOT NULL,
         question VARCHAR(1000) NOT NULL,
         answer1 VARCHAR(1000) NOT NULL,
         answer2 VARCHAR(1000) NOT NULL,
@@ -169,33 +169,33 @@ async function isReady() {
       `,
       `
       CREATE TABLE IF NOT EXISTS examssresult (
-        u_id INT REFERENCES users (id) NOT NULL,
-        exam_id INT REFERENCES exams (id) NOT NULL,
+        u_id INT REFERENCES users (id)  ON DELETE CASCADE NOT NULL,
+        exam_id INT REFERENCES exams (id)  ON DELETE CASCADE NOT NULL,
         result INT NOT NULL
       );
       `,
       `
       CREATE TABLE IF NOT EXISTS examforuser  (
-        u_id INT REFERENCES users (id) NOT NULL,
-        exam_id INT REFERENCES exams (id) NOT NULL,
-        q_id INT REFERENCES questiones (id) NOT NULL
+        u_id INT REFERENCES users (id)  ON DELETE CASCADE NOT NULL,
+        exam_id INT REFERENCES exams (id)  ON DELETE CASCADE NOT NULL,
+        q_id INT REFERENCES questiones (id)  ON DELETE CASCADE NOT NULL
       );
       `,
       `
       CREATE TABLE IF NOT EXISTS lecturevideos (
         id SERIAL PRIMARY KEY,
-        lo_id INT REFERENCES lecture_online (id),
-        lg_id INT REFERENCES lecture_group (id),
+        lo_id INT REFERENCES lecture_online (id)  ON DELETE CASCADE,
+        lg_id INT REFERENCES lecture_group (id)  ON DELETE CASCADE,
         video VARCHAR(1000) NOT NULL,
         v_name VARCHAR(255) NOT NULL
     );
-      `,
-      `
-      CREATE TABLE IF NOT EXISTS usersip (
-        ip VARCHAR(255) PRIMARY KEY,
-        u_id INT REFERENCES users (id)
-       );
-      `
+       `,
+      // `
+      // CREATE TABLE IF NOT EXISTS usersip (
+      //   ip VARCHAR(255) PRIMARY KEY,
+      //   u_id INT REFERENCES users (id)  ON DELETE CASCADE
+      //  );
+      // `
     ];
 
     const tablesToCheck = [
@@ -219,8 +219,8 @@ async function isReady() {
       "questiones",
       "examssresult",
       "examforuser",
-      "lecturevideos",
-      "usersip"
+       "lecturevideos"
+      //, "usersip"
     ];
 
     let c = 0;

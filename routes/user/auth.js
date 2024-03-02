@@ -44,7 +44,7 @@ router.post("/signup", async (req, res) => {
     const UID = result.rows[0].id,
       obj = result.rows[0];
       await client.query("INSERT INTO userwallet (u_id) VALUES ($1) ;",[UID]);
-      await client.query("INSERT INTO usersip (ip,u_id) VALUES($1,$2) ;",[req.body.ip,UID]);
+      // await client.query("INSERT INTO usersip (ip,u_id) VALUES($1,$2) ;",[req.body.ip,UID]);
     res.json({
       msg: "ok you register successfully",
       token: generateToken(UID, req.body.mail),
@@ -100,25 +100,25 @@ router.post("/login", async (req, res) => {
     let result = await client.query(sqlQuery, [req.body.mail]);
 
     if (result.rows.length > 0) {
+     
       let uid = result.rows[0].id;
-      let userIpQuery = await client.query("SELECT ip FROM usersip WHERE u_id = $1 ;", [uid]);
-      
-      if (userIpQuery.rows.length > 0) {
-        let user_ip = userIpQuery.rows[0].ip;
-          console.log(user_ip+"     "+req.body.ip);
-        if (user_ip !== req.body.ip) {
-          if (user_ip === 'sata') {
-            console.log("change");
-            await client.query("UPDATE usersip SET ip = $1 WHERE u_id = $2;", [req.body.ip, uid]);
-          } else {
-            return res.status(400).json({ msg: "You must login from the same device" });
-          }
+      // let userIpQuery = await client.query("SELECT ip FROM usersip WHERE u_id = $1 ;", [uid]); 
+      // if (userIpQuery.rows.length > 0) {
+      //   let user_ip = userIpQuery.rows[0].ip;
+      //     console.log(user_ip+"     "+req.body.ip);
+      //   if (user_ip !== req.body.ip) {
+      //     if (user_ip === 'sata') {
+      //       console.log("change");
+      //       await client.query("UPDATE usersip SET ip = $1 WHERE u_id = $2;", [req.body.ip, uid]);
+      //     } else {
+      //       return res.status(400).json({ msg: "You must login from the same device" });
+      //     }
           
-        }
-      } 
-      else {
-        await client.query("INSERT INTO usersip (ip, u_id) VALUES ($1, $2) ;", [req.body.ip, uid]);
-      }
+      //   }
+      // } 
+      // else {
+      //   await client.query("INSERT INTO usersip (ip, u_id) VALUES ($1, $2) ;", [req.body.ip, uid]);
+      // }
       
       const isPasswordMatch = await bcrypt.compare(req.body.pass, result.rows[0].pass);
       

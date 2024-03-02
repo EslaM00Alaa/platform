@@ -19,7 +19,7 @@ router.post("/", isAdmin, async (req, res) => {
       .join(", ");
     const insertQuery = `INSERT INTO codes (code, value) VALUES ${values}`;
 
-    await client.query("UPDATE platfomwallet SET value = value + $1;", [
+    await client.query("UPDATE platformwallet SET value = value + $1;", [
       n * value,
     ]);
     await client.query(insertQuery);
@@ -37,7 +37,7 @@ router.get("/allcodes", async (req, res) => {
 
 router.get("/totalmony", isAdmin, async (req, res) => {
   try {
-    const result = (await client.query("SELECT * FROM platfomwallet ;"))
+    const result = (await client.query("SELECT * FROM platformwallet ;"))
       .rows[0];
     console.log(result);
     res.json(result);
