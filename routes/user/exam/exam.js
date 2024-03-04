@@ -81,15 +81,17 @@ router.get("/exam/:id", isUser, async (req, res) => {
             total += degree;
             result += correctanswer === answer.ans ? degree : 0;
         }
-
+ 
+        let solvedBefore = (await client.query("SELECT * FROM examssresult WHERE exam_id = $1 AND u_id = $2 ;",[user_id, exam_id])).router.length == 0;
+        if(solvedBefore)
         await client.query("INSERT INTO examssresult (u_id, exam_id, result) VALUES ($1, $2, $3)", [user_id, exam_id, result]);
-
         res.json({ result, total });
     } catch (error) {
         console.error("Error processing exam result:", error);
         res.status(500).json({ msg: "Internal server error." });
     }
 });
+
 
 
 module.exports = router;

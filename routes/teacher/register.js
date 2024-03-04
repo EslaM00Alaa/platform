@@ -219,5 +219,27 @@ router.delete("/:id", isAdmin, async (req, res) => {
 });
 
 
+router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
+  try {
+    let exam_id = req.params.examId;
+    let query = `
+      SELECT u.fName, u.lName, u.mail, er.result 
+      FROM users u 
+      JOIN examssresult er ON er.u_id = u.id 
+      WHERE er.exam_id = $1 
+      ORDER BY er.result DESC;
+    `;
+    let result = await client.query(query, [exam_id]);
+    if (result.rows.length === 0) {
+      // Handle case when no results are found
+      return res.status(404).json({ msg: "No results found for this exam." });
+    }
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});
+
+
 
 module.exports = router;
