@@ -52,9 +52,15 @@ router.get("/filter/:id", isTeacher, async (req, res) => {
 
 router.get("/:id", isTeacher, async (req, res) => {
   try {
+   
     let group_id = req.params.id;
     let result = await client.query(
-      "SELECT g.group_name, u.id, u.fname, u.mail FROM joingroup j JOIN users u ON j.std_id = u.id JOIN groups g ON g.id = j.group_id WHERE j.group_id = $1",
+      `SELECT g.group_name, u.id, u.fname, u.lname, u.mail 
+      FROM joingroup j 
+      JOIN users u ON j.std_id = u.id 
+      JOIN groups g ON g.id = j.group_id 
+      WHERE j.group_id = $1;
+      `,
       [group_id]
     );
 
@@ -64,6 +70,7 @@ router.get("/:id", isTeacher, async (req, res) => {
         data: result.rows.map(row => ({
           id: row.id,
           fname: row.fname,
+          lname: row.lname,
           mail: row.mail
         }))
       };

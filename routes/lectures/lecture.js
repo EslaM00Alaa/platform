@@ -175,7 +175,7 @@ router.get("/lectureonline/:lo_id", isUser, async (req, res) => {
     }
 
     const lectureQuery = {
-      text: "SELECT lo.description, e.id AS exam_id, e.name AS exam_name , er.result AS last_result  FROM lecture_online lo LEFT JOIN exams e ON lo.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id WHERE lo.id = $2",
+      text: "SELECT c.image,lo.description, e.id AS exam_id, e.name AS exam_name , er.result AS last_result  FROM lecture_online lo LEFT JOIN covers c ON lo.cover = c.image_id  LEFT JOIN exams e ON lo.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id WHERE lo.id = $2",
       values: [user_id, lo_id]
     };
     const lectureResult = await client.query(lectureQuery);
@@ -206,7 +206,7 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
     }
 
     const lectureQuery = {
-      text: "SELECT lg.description, e.id AS exam_id, e.name AS exam_name, er.result AS last_result FROM lecture_group lg LEFT JOIN exams e ON lg.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id WHERE lg.id = $2",
+      text: "SELECT c.image,lg.description, e.id AS exam_id, e.name AS exam_name, er.result AS last_result FROM lecture_group lg LEFT JOIN covers c ON lg.cover = c.image_id  LEFT JOIN exams e ON lg.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id WHERE lg.id = $2",
       values: [user_id, lg_id]
     };
     const lectureResult = await client.query(lectureQuery);
