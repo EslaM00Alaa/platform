@@ -54,18 +54,18 @@ router.get("/:id", isTeacher, async (req, res) => {
   try {
     let group_id = req.params.id;
     let result = await client.query(
-      "SELECT g.group_name, u.id, u.fName, u.mail FROM joingroup j JOIN users u ON j.std_id = u.id JOIN groups g ON g.id = j.group_id WHERE j.group_id = $1",
+      "SELECT g.group_name, u.id, u.fname, u.mail FROM joingroup j JOIN users u ON j.std_id = u.id JOIN groups g ON g.id = j.group_id WHERE j.group_id = $1",
       [group_id]
     );
 
     if (result.rows.length > 0) {
       const output = {
         group_name: result.rows[0].group_name,
-        data: {
-          id: result.rows[0].id,
-          fname: result.rows[0].fname,
-          mail: result.rows[0].mail
-        }
+        data: result.rows.map(row => ({
+          id: row.id,
+          fname: row.fname,
+          mail: row.mail
+        }))
       };
       return res.json(output);
     } else {
@@ -75,6 +75,7 @@ router.get("/:id", isTeacher, async (req, res) => {
     return res.status(500).json({ msg: error.message });
   }
 });
+
 
  // ادخال طالب المجموعه
  router.post("/join", isTeacher, async (req, res) => {
