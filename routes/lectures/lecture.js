@@ -159,6 +159,7 @@ router.post("/video", isTeacher , async (req, res) => {
   }
 });
 
+
 router.get("/lectureonline/:lo_id", isUser, async (req, res) => {
   try {
     const { lo_id } = req.params;
@@ -246,6 +247,93 @@ router.get("/video/:id", isUser, async (req, res) => {
   }
 });
 
+
+router.get("/lectureonlinet/:lo_id", isTeacher, async (req, res) => {
+  try {
+    const { lo_id } = req.params;
+    const { teacher_id } = req.body;
+
+    const permissionCheckQuery = {
+      text: "SELECT teacher_id FROM lecture_online WHERE id = $1 ;",
+      values: [lo_id]
+    };
+    const permissionResult = await client.query(permissionCheckQuery);
+
+    if (permissionResult.rows.length === 0 || teacher_id != permissionResult.rows[0].teacher_id ) {
+      return res.status(404).json({ msg: "You do not have permission to access this lecture content." });
+    }
+
+    const lectureQuery = {
+      text: "SELECT c.image,lo.description, e.id AS exam_id, e.name AS exam_name  FROM lecture_online lo LEFT JOIN covers c ON lo.cover = c.image_id  LEFT JOIN exams e ON lo.exam_id = e.id  WHERE lo.id = $1",
+      values: [lo_id]
+    };
+    const lectureResult = await client.query(lectureQuery);
+   
+    let videos = await client.query("SELECT id, v_name FROM lecturevideos WHERE lo_id = $1", [lo_id]);
+
+    lectureResult.rows[0].videos = videos.rows;
+    
+    res.json(lectureResult.rows[0]);
+  } catch (error) {
+    console.error("Error fetching lecture details:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+router.get("/lecturegroupt/:lg_id", isTeacher, async (req, res) => {
+  try {
+    const { lg_id } = req.params; // Corrected variable name from lo_id to lg_id
+    const { teacher_id } = req.body;
+
+    const permissionCheckQuery = {
+      text: "SELECT teacher_id FROM lecture_group WHERE id = $1 ;",
+      values: [lg_id]
+    };
+    const permissionResult = await client.query(permissionCheckQuery);
+
+    if (permissionResult.rows.length === 0 || teacher_id != permissionResult.rows[0].teacher_id ) {
+      return res.status(404).json({ msg: "You do not have permission to access this lecture content." });
+    }
+
+
+    const lectureQuery = {
+      text: "SELECT c.image,lg.description, e.id AS exam_id, e.name AS exam_name FROM lecture_group lg LEFT JOIN covers c ON lg.cover = c.image_id  LEFT JOIN exams e ON lg.exam_id = e.id  WHERE lg.id = $1",
+      values: [ lg_id]
+    };
+    const lectureResult = await client.query(lectureQuery);
+   
+    let videos = await client.query("SELECT id, v_name FROM lecturevideos WHERE lg_id = $1", [lg_id]); // Corrected lo_id to lg_id
+
+    lectureResult.rows[0].videos = videos.rows;
+    
+    res.json(lectureResult.rows[0]);
+  } catch (error) {
+    console.error("Error fetching lecture details:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
+router.get("/videot/:id", isTeacher, async (req, res) => {
+  try {
+    const { id } = req.params; // Assuming user ID is in params, not body
+
+    const query = `
+      SELECT lv.video
+      FROM lecturevideos lv
+      WHERE id = $1 
+    `;
+
+    const { rows } = await client.query(query, [id]);
+
+    if (rows.length > 0) {
+      res.json({ video: rows[0].video });
+    } else {
+      res.status(404).json({ msg: "You can't access this video" });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
 
 
 router.post("/exam", isTeacher, async (req, res) => {

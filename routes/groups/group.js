@@ -56,10 +56,10 @@ router.get("/:id", isTeacher, async (req, res) => {
     let group_id = req.params.id;
     let result = await client.query(
       `SELECT g.group_name, u.id, u.fname, u.lname, u.mail 
-      FROM joingroup j 
-      JOIN users u ON j.std_id = u.id 
-      JOIN groups g ON g.id = j.group_id 
-      WHERE j.group_id = $1;
+      FROM groups g
+      LEFT JOIN joingroup j ON g.id = j.group_id 
+      LEFT JOIN users u ON j.std_id = u.id 
+      WHERE g.id = $1;      
       `,
       [group_id]
     );
