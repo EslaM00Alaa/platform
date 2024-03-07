@@ -74,6 +74,8 @@ router.get("/:id", isTeacher, async (req, res) => {
           mail: row.mail
         }))
       };
+      if(!output.data[0].id)
+       output.data=null;
       return res.json(output);
     } else {
       return res.status(404).json({ msg: "No data found for this group ID" });
