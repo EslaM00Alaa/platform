@@ -483,9 +483,12 @@ router.post(
           "INSERT INTO covers(image_id, image) VALUES ($1, $2);",
           [public_id, secure_url]
         );
-      }
+      } 
+      
+      // Convert correctAnswer to a number
+      correctAnswer = parseInt(correctAnswer);
 
-      let correctAns;
+      let correctAns="";
       switch (correctAnswer) {
         case 1:
           correctAns = answer1;
@@ -502,9 +505,6 @@ router.post(
         default:
           correctAns = "";
       }
-
-      if (correctAns.length==0)
-        return res.json({ msg: "corect answer must be 1 or 2 or 3 or 4" });
 
       // Insert the question into the questiones table
       await client.query(

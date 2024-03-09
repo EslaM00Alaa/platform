@@ -175,13 +175,6 @@ async function isReady() {
       );
       `,
       `
-      CREATE TABLE IF NOT EXISTS examforuser  (
-        u_id INT REFERENCES users (id)  ON DELETE CASCADE NOT NULL,
-        exam_id INT REFERENCES exams (id)  ON DELETE CASCADE NOT NULL,
-        q_id INT REFERENCES questiones (id)  ON DELETE CASCADE NOT NULL
-      );
-      `,
-      `
       CREATE TABLE IF NOT EXISTS lecturevideos (
         id SERIAL PRIMARY KEY,
         lo_id INT REFERENCES lecture_online (id)  ON DELETE CASCADE,
@@ -218,7 +211,6 @@ async function isReady() {
       "codes",
       "questiones",
       "examssresult",
-      "examforuser",
        "lecturevideos"
       //, "usersip"
     ];
