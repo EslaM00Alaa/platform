@@ -485,6 +485,33 @@ router.delete("/exam/group/:id",isTeacher,async (req, res) => {
 });
 
 
+router.delete("/video/lonline/:id",isTeacher, async (req, res) => {
+  try {
+    const vid = req.params.id;
+       await client.query("UPDATE lecturevideos SET lo_id = null WHERE id = $1 ;", [vid]);
+    
+      res.json("video deleted from this lecture");
+  } catch (error) {
+    console.error("Error deleting exam:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
+
+router.delete("/video/group/:id",isTeacher, async (req, res) => {
+  try {
+    const vid = req.params.id;
+       await client.query("UPDATE lecturevideos SET lg_id = null WHERE id = $1 ;", [vid]);
+    
+      res.json("video deleted from this lecture");
+  } catch (error) {
+    console.error("Error deleting exam:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
+
+
 
 
 
