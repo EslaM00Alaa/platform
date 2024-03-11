@@ -438,6 +438,56 @@ router.get("/exam/:id/:qid", isTeacher, async (req, res) => {
   }
 });
 
+
+router.delete("/exam/lonline/:id",isTeacher, async (req, res) => {
+  try {
+    const id = req.params.id;
+    let exam_id =( await client.query("SELECT exam_id FROM lecture_online WHERE id = $1 ; ",[id])).rows[0].exam_id
+    // Assuming client is a properly initialized database client
+     await client.query("UPDATE lecture_online SET exam_id = null WHERE id = $1 ;", [id]);
+    
+    let result2 = await client.query("SELECT * FROM lecture_group WHERE exam_id = $1",[exam_id])
+    if(result2.rows.length==0)
+    {
+      await client.query("DELETE FROM exams WHERE id = $1;",[exam_id])
+    }
+
+    
+      res.json("Exam deleted from this lecture");
+  } catch (error) {
+    console.error("Error deleting exam:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
+router.delete("/exam/group/:id",isTeacher,async (req, res) => {
+  try {
+    const id = req.params.id;
+    // Assuming client is a properly initialized database client
+    let exam_id =( await client.query("SELECT exam_id FROM lecture_group WHERE id = $1 ; ",[id])).rows[0].exam_id
+
+    const result = await client.query("UPDATE lecture_group SET exam_id = null WHERE id = $1", [id]);
+    let result2 = await client.query("SELECT * FROM lecture_online WHERE exam_id = $1",[exam_id])
+    if(result2.rows.length==0)
+    {
+      await client.query("DELETE FROM exams WHERE id = $1;",[exam_id])
+    }
+
+    if (result.rowCount === 1) {
+      res.json("Exam deleted from this lecture");
+    } else {
+      res.status(404).json({ msg: "No lecture found with the provided ID" });
+    }
+  } catch (error) {
+    console.error("Error deleting exam:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
+
+
+
+
 // questiones
 router.post(
   "/question",
