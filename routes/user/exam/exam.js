@@ -19,7 +19,7 @@ router.get("/exam/:id", isUser, async (req, res) => {
     
 
     const question = await client.query(
-      "SELECT id, question, answer1, answer2, answer3, answer4, cover FROM questiones WHERE exam_id = $1 ORDER BY RANDOM() LIMIT $2;",
+      "SELECT q.id, q.question, q.answer1, q.answer2, q.answer3, q.answer4, c.image FROM  questiones q ON LEFT JOIN covers c  ON q.cover = c.image_id  WHERE q.exam_id = $1 ORDER BY RANDOM() LIMIT $2;",
       [exam_id, minNumber]
     );
 
