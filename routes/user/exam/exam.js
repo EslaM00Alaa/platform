@@ -19,11 +19,15 @@ router.get("/exam/:id", isUser, async (req, res) => {
     
 
     const question = await client.query(
-      "SELECT q.id, q.question, q.answer1, q.answer2, q.answer3, q.answer4, c.image FROM  questiones q ON LEFT JOIN covers c  ON q.cover = c.image_id  WHERE q.exam_id = $1 ORDER BY RANDOM() LIMIT $2;",
+      "SELECT q.id, q.question, q.answer1, q.answer2, q.answer3, q.answer4, c.image FROM  questiones q  LEFT JOIN covers c  ON q.cover = c.image_id  WHERE q.exam_id = $1 ORDER BY RANDOM() LIMIT $2;",
       [exam_id, minNumber]
     );
 
-    res.json(question.rows);
+    const exam_name = (await client.query("SELECT name FROM exams WHERE id = $1 ;",[exam_id])).rows[0].name
+
+    let exam = {name:exam_name , questions : question.rows }
+
+    res.json(exam);
   } catch (error) {
     console.error("Error fetching exam questions:", error);
     res.status(500).json({ msg: "Internal server error." });
