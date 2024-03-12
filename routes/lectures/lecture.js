@@ -419,27 +419,15 @@ router.get("/exams/:gradId", isTeacher, async (req, res) => {
 });
 
 // get exam
-router.get("/exam/:id/:qid", isTeacher, async (req, res) => {
+router.get("/exam/:id", isTeacher, async (req, res) => {
   try {
     let exam_id = req.params.id;
-    let limit = 1;
-    let skip = (+req.params.qid - 1) * limit;
-
-    // Corrected SQL query syntax and added alias for q.exam_id
+    let name = (await client.query("SELECT name FROM exams WHERE id = $1;",[exam_id])).rows[0].name
     let result = await client.query(
-      "SELECT q.id, q.exam_id AS exam_id, q.question, q.answer1, q.answer2, q.answer3, q.answer4, q.degree, c.image FROM questiones q left JOIN covers c ON c.image_id = q.cover WHERE q.exam_id = $1 LIMIT $2 OFFSET $3;",
-      [exam_id, limit, skip]
+      "SELECT q.id, q.exam_id AS exam_id, q.question, q.answer1, q.answer2, q.answer3, q.answer4, q.degree, c.image FROM questiones q left JOIN covers c ON c.image_id = q.cover WHERE q.exam_id = $1 ",
+      [exam_id]
     );
-
-    if (result.rows.length === 0) {
-      return res
-        .status(404)
-        .json({
-          msg: "No questions found for the provided exam ID and question ID.",
-        });
-    }
-
-    res.json(result.rows);
+    res.json({name,qusetions:result.rows});
   } catch (error) {
     console.error("Error fetching exam questions:", error);
     res.status(500).json({ msg: "Internal server error." });
