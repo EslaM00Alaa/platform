@@ -356,12 +356,20 @@ router.post("/exam", isTeacher, async (req, res) => {
     const examId = result.rows[0].id;
 
     if (lo_id) {
+      let isExist = (await client.query("SELECT exam_id FROM lecture_online WHERE id = $1;", [lo_id])).rows[0];
+      if (isExist && isExist.exam_id) {
+          return res.json({ msg: "lecture has exam" });
+      }
       await client.query(
         "UPDATE lecture_online SET exam_id = $1 WHERE id = $2;",
         [examId, lo_id]
       );
     }
     if (lg_id) {
+      let isExist = (await client.query("SELECT exam_id FROM lecture_group WHERE id = $1;", [lg_id])).rows[0];
+      if (isExist && isExist.exam_id) {
+          return res.json({ msg: "lecture has exam" });
+      }
       await client.query(
         "UPDATE lecture_group SET exam_id = $1 WHERE id = $2;",
         [examId, lg_id]
