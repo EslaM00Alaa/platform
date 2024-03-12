@@ -225,16 +225,17 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
 
 router.get("/video/:id", isUser, async (req, res) => {
   try {
-    const { id: user_id } = req.params; // Assuming user ID is in params, not body
+    const vid = req.params.id;
+    const { user_id } = req.body;
 
     const query = `
       SELECT lv.video
       FROM lecturevideos lv
       JOIN joininglecture jl ON jl.lgroup_id = lv.lg_id OR jl.lonline_id = lv.lo_id
-      WHERE jl.u_id = $1
+      WHERE jl.u_id = $1 AND lv.id = $2
     `;
 
-    const { rows } = await client.query(query, [user_id]);
+    const { rows } = await client.query(query, [user_id,vid]);
 
     if (rows.length > 0) {
       res.json({ video: rows[0].video });
@@ -246,6 +247,8 @@ router.get("/video/:id", isUser, async (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 });
+
+
 
 
 router.get("/lectureonlinet/:lo_id", isTeacher, async (req, res) => {
