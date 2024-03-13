@@ -60,13 +60,13 @@ router.post("/login", async (req, res) => {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "ea37645520@gmail.com",
-            pass: "zuafhkesfceautux",
+            user: "onlineem936@gmail.com",
+            pass: "qgqfaphmbvijlrur",
           },
         });
   
         const mailOptions = {
-          from: "ea37645520@gmail.com",
+          from: "onlineem936@gmail.com",
           to: user.mail,
           subject: "Verify Code",
           html: `<h1>${randomNumber}</h1>`,
