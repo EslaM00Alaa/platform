@@ -222,6 +222,7 @@ router.delete("/:id", isAdmin, async (req, res) => {
 router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
   try {
     let exam_id = req.params.examId;
+    let name = (await client.query("SELECT name FROM exams WHERE id = $1;",[exam_id])).rows[0].name
     let query = `
       SELECT u.fName, u.lName, u.mail,u.phone, er.result 
       FROM users u 
@@ -234,7 +235,7 @@ router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
       // Handle case when no results are found
       return res.status(404).json({ msg: "No results found for this exam." });
     }
-    res.json(result.rows);
+    res.json({name,data:result.rows});
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }
