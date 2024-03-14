@@ -11,7 +11,7 @@ function validateUser(obj)
         pass:joi.string().trim().max(300).required(),
         lastVerifyCode:joi.string().trim(),
         phone:joi.string().trim(),
-        ip:joi.string().trim(),
+        ip:joi.string().trim().required(),
         grad:joi.number(),
     })
     return schema.validate(obj)
