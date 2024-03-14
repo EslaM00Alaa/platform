@@ -183,12 +183,12 @@ async function isReady() {
         v_name VARCHAR(255) NOT NULL
     );
        `,
-      // `
-      // CREATE TABLE IF NOT EXISTS usersip (
-      //   ip VARCHAR(255) PRIMARY KEY,
-      //   u_id INT REFERENCES users (id)  ON DELETE CASCADE
-      //  );
-      // `
+      `
+      CREATE TABLE IF NOT EXISTS usersip (
+        ip VARCHAR(255) PRIMARY KEY,
+        u_id INT REFERENCES users (id)  ON DELETE CASCADE
+       );
+      `
     ];
 
     const tablesToCheck = [
@@ -212,7 +212,7 @@ async function isReady() {
       "questiones",
       "examssresult",
        "lecturevideos"
-      //, "usersip"
+      , "usersip"
     ];
 
     let c = 0;

@@ -83,14 +83,14 @@ router.post("/add", isAdmin, photoUpload.single("image"), async (req, res) => {
     await Promise.all(classInserts);
 
     await client.query("COMMIT"); // Commit the database transaction
-
-    res.json({ msg: "One teacher registered" });
-
     fs.unlink(imagePath, (err) => {
       if (err) {
         console.error("Error deleting image:", err);
       }
     });
+
+    res.json({ msg: "One teacher registered" });
+    
   } catch (error) {
     await client.query("ROLLBACK"); // Rollback the database transaction in case of an error
     res.status(500).json({ msg: error.message });

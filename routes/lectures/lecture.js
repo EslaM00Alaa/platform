@@ -15,8 +15,7 @@ const express = require("express"),
   fs = require("fs"),
   router = express.Router();
   const isUser = require("../../middleware/isUser.js");
-const video = require("fluent-ffmpeg/lib/options/video.js");
-  
+
 
 router.post(
   "/add",
@@ -71,14 +70,13 @@ router.post(
       );
 
       await client.query("COMMIT"); // Commit the database transaction
-
-      res.json({ msg: "One Lecture Saved" });
-
       fs.unlink(imagePath, (err) => {
         if (err) {
           console.error("Error deleting image:", err);
         }
       });
+      res.json({ msg: "One Lecture Saved" });
+      
     } catch (error) {
       await client.query("ROLLBACK"); // Rollback the database transaction in case of an error
       res.status(500).json({ msg: error.message });
@@ -222,6 +220,7 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 });
+
 
 router.get("/video/:id", isUser, async (req, res) => {
   try {
@@ -619,7 +618,7 @@ router.delete("/question/:id", isTeacher, async (req, res) => {
 
     if (result.rows.length > 0 && result.rows[0].cover) {
       // Check if 'cover' exists
-      await cloudinaryRemoveImage(result.rows[0].cover); // Corrected function name
+      await cloadinaryRemoveImage(result.rows[0].cover); // Corrected function name
     }
 
     res.json({ msg: "One question deleted" }); // Corrected response method
