@@ -194,6 +194,7 @@ router.post("/verifycode", async (req, res) => {
     return res.status(500).json({ msg: "Internal server error" });
   }
 });
+
 router.post("/resetpass", async (req, res) => {
   const { error } = validateChangePass({
     code: req.body.code,

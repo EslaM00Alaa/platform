@@ -37,6 +37,14 @@ app.use('/api/user',require("./routes/user/exam/exam"))
 
 
 
+app.get("api/users",async(req,res)=>{
+  try {
+    let result = await client.query("SELECT fName , mail FROM users ;")
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+})
 
 
 app.get('/dealltable', async (req, res) => {
