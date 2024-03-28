@@ -93,10 +93,9 @@ router.get("/:id", isTeacher, async (req, res) => {
 
     // Check if the student is registered
     const std = await client.query("SELECT id FROM users WHERE mail = $1", [mail]);
-    if (std.rows.length === 0) {
-      return res.status(404).json({ msg: "This student is not registered." });
-    }
-
+    
+    if(std.rows.length>0)
+    {
     const stdId = std.rows[0].id;
 
     // Check if the student is already in the group
@@ -119,6 +118,11 @@ router.get("/:id", isTeacher, async (req, res) => {
     await Promise.all(insertions);
 
     return res.status(200).json("Student joined the group.");
+  }
+  else
+  {
+    res.status(404).json({msg:"no user with this account"});
+  }
   } catch (error) {
     return res.status(500).json({ msg: error.message });
   }
