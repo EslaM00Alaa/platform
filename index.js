@@ -37,7 +37,7 @@ app.use('/api/user',require("./routes/user/exam/exam"))
 
 
 
-app.get("api/users",async(req,res)=>{
+app.get("/api/users",async(req,res)=>{
   try {
     let result = await client.query("SELECT fName , mail FROM users ;")
     res.json(result.rows);
