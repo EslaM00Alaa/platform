@@ -92,7 +92,7 @@ router.get("/:id", isTeacher, async (req, res) => {
     const { group_id, mail } = req.body;
 
     // Check if the student is registered
-    const std = await client.query("SELECT id FROM users WHERE mail = $1", [mail]);
+    const std = await client.query("SELECT id FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
 
     if (std.rows.length > 0) {
       const stdId = std.rows[0].id;
