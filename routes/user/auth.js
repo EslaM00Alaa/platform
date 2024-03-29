@@ -36,7 +36,7 @@ router.post("/signup", async (req, res) => {
     let result = await client.query(sqlQuery, [
       req.body.fName,
       req.body.lName,
-      req.body.mail,
+      req.body.mail.trim(),
       req.body.pass,
       req.body.phone,
       req.body.grad,
