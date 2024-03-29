@@ -95,9 +95,8 @@ router.post("/login", async (req, res) => {
   try {
     const { error } = validateLoginUser(req.body);
     if (error) return res.status(400).json({ msg: error.details[0].message });
-
-    let sqlQuery = `SELECT * FROM users WHERE mail = $1 `;
-    let result = await client.query(sqlQuery, [req.body.mail]);
+     let mail = req.body.mail ;
+    let result = await client.query("SELECT * FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
 
     if (result.rows.length > 0) {
      
@@ -149,9 +148,9 @@ router.post("/verifycode", async (req, res) => {
     if (error) {
       return res.status(400).json({ msg: error.details[0].message });
     }
-
-    const sqlQuery = "SELECT * FROM users WHERE mail = $1";
-    const result = await client.query(sqlQuery, [req.body.mail]);
+     let mail = req.body.mail;
+    
+    const result =await client.query("SELECT id FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
 
     if (result.rows.length > 0) {
       const user = result.rows[0];
@@ -207,8 +206,8 @@ router.post("/resetpass", async (req, res) => {
   const verifycode = req.body.code.trim(); // Trim the verify code
   const pass = req.body.pass;
   const mail = req.body.mail;
-  const sqlQuery = "SELECT * FROM users WHERE mail = $1";
-  const result = await client.query(sqlQuery, [mail]);
+  
+  const result = await client.query("SELECT id FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
 
   const user = result.rows[0];
   console.log(user);
