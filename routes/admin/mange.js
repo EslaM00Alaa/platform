@@ -134,23 +134,22 @@ router.put("/zero/:id", isAdmin, async (req, res) => {
   }
 });
 
-
-
-router.put("/changeuserdevice",isAdmin,async (req, res) => {
+router.put("/changeuserdevice", isAdmin, async (req, res) => {
   try {
     let { mail } = req.body;
-    let result = await client.query("SELECT id FROM users WHERE mail = $1", [mail]);
+    let result = await client.query("SELECT id FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
     if (result.rows.length > 0) {
       let u_id = result.rows[0].id;
       await client.query("UPDATE usersip SET ip = 'sata' WHERE u_id = $1", [u_id]);
-      res.json({ msg: "DONE" });
+      res.json({ msg: "تم" });
     } else {
-      res.status(404).json({ msg: "User not found" });
+      res.status(404).json({ msg: "لم يتم العثور على المستخدم" });
     }
   } catch (error) {
-    return res.status(500).json({ msg: "Internal server error" });
+    return res.status(500).json({ msg: "خطأ في الخادم الداخلي" });
   }
 });
+
 
 
 module.exports = router;

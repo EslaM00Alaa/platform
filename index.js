@@ -39,22 +39,6 @@ app.use('/api/user',require("./routes/user/exam/exam"))
 
 app.get("/api/users",async(req,res)=>{
   try {
-    await client.query(`
-    DO $$
-   BEGIN
-    -- Add a new column to hold the group ID
-    ALTER TABLE IF EXISTS groupslecture
-    ADD COLUMN IF NOT EXISTS g_id INT REFERENCES groups(id);
-
-    -- Drop the SERIAL primary key constraint
-    ALTER TABLE IF EXISTS groupslecture
-    DROP CONSTRAINT IF EXISTS groupslecture_pkey;
-
-    -- Add a composite primary key constraint
-    ALTER TABLE IF EXISTS groupslecture
-    ADD CONSTRAINT groupslecture_pkey PRIMARY KEY (g_id, l_id);
-    END $$;
-    `)
     let result = await client.query("SELECT fName , mail FROM users ;")
     res.json(result.rows);
   } catch (error) {
