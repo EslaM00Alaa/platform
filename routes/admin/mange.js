@@ -138,7 +138,6 @@ router.put("/zero/:id", isAdmin, async (req, res) => {
 
 router.put("/changeuserdevice", isAdmin, async (req, res) => {
   try {
-    await client.query("ALTER TABLE usersip DROP COLUMN ip, ADD COLUMN ip VARCHAR(255);");
     let { mail } = req.body;
     let result = await client.query("SELECT id FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
     if (result.rows.length > 0) {
