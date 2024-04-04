@@ -666,10 +666,13 @@ router.delete("/online/:id", isTeacher, async (req, res) => {
     const imageIdResult = await client.query(imageIdQuery, [lectureId]);
     const imageId = imageIdResult.rows[0].cover;
 
+    const deleteQuery2 = "DELETE FROM lecturevideos WHERE lo_id = $1";
+    await client.query(deleteQuery2, [lectureId]);
+
     // Delete the lecture from the database
     const deleteQuery = "DELETE FROM lecture_online WHERE id = $1";
     await client.query(deleteQuery, [lectureId]);
-
+   
     // Remove the image from Cloudinary
     await cloadinaryRemoveImage(imageId);
 
