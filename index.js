@@ -63,10 +63,24 @@ app.get('/dealltable', async (req, res) => {
   }
 });   
 
+async function addForeignKeyConstraint() {
+    try {
+      const sqlQuery = `
+          ALTER TABLE lecture_online
+          ADD CONSTRAINT lecture_online_teacher_id_fkey FOREIGN KEY (teacher_id)
+          REFERENCES teachers (id) ON DELETE NO ACTION;
+      `;
 
+      await client.query(sqlQuery);
+      console.log('Foreign key constraint added successfully.');
+  } catch (error) {
+      console.error('Error adding foreign key constraint:', error);
+}
+}
 
 client.connect().then(async() => {
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
   await isReady();
+  await  addForeignKeyConstraint();
 });

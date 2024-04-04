@@ -96,7 +96,7 @@ async function isReady() {
       `
       CREATE TABLE IF NOT EXISTS lecture_group (
         id SERIAL PRIMARY KEY,
-        teacher_id INT REFERENCES teachers (id)  ON DELETE CASCADE NOT NULL,
+        teacher_id INT REFERENCES teachers (id) NOT NULL,
         cover VARCHAR(255) REFERENCES covers (image_id)  ON DELETE CASCADE NOT NULL,
         description VARCHAR(255) NOT NULL,
         grad_id INT REFERENCES grades (id)  ON DELETE CASCADE NOT NULL,
