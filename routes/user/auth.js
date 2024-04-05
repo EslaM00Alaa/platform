@@ -202,6 +202,7 @@ router.post("/verifycode", async (req, res) => {
   }
 });
 
+// Import bcrypt module
 
 router.post("/resetpass", async (req, res) => {
   const { error } = validateChangePass({
@@ -209,30 +210,30 @@ router.post("/resetpass", async (req, res) => {
     mail: req.body.mail,
     pass: req.body.pass,
   });
-  if (error) return res.status(404).json({ msg: error.details[0].message });
+  if (error) return res.status(400).json({ msg: error.details[0].message }); // Changed status code to 400 for bad request
+
   const salt = await bcrypt.genSalt(10);
-  req.body.pass = await bcrypt.hash(req.body.pass, salt);
-  const verifycode = req.body.code.trim(); // Trim the verify code
-  const pass = req.body.pass;
+  const hashedPassword = await bcrypt.hash(req.body.pass, salt);
+
   const mail = req.body.mail;
-  
-  const result = await client.query("SELECT id FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
+  const verifycode = req.body.code.trim(); // Trim the verify code
 
+  const result = await client.query("SELECT id, verify_code FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
   const user = result.rows[0];
-  console.log(user);
-  let isPasswordMatch = await bcrypt.compare(
-    verifycode,
-    user.verify_code.trim()
-  ); // Trim the user.verify_code
-  console.log(isPasswordMatch);
-  if (isPasswordMatch) {
-    const sqlQuery1 = "UPDATE users SET pass = $1 WHERE id = $2";
-    await client.query(sqlQuery1, [pass, user.id]);
 
-    res.json({ msg: "password is changed" });
-  } else {
-    res.status(404).json({ msg: "verify code is not correct" });
+  if (!user) {
+    return res.status(404).json({ msg: "User not found" }); // Handle case where user is not found
   }
+
+  const isPasswordMatch = await bcrypt.compare(verifycode, user.verify_code.trim()); // Trim the user.verify_code
+  if (!isPasswordMatch) {
+    return res.status(401).json({ msg: "Verify code is not correct" }); // Changed status code to 401 for unauthorized
+  }
+
+  const sqlQuery1 = "UPDATE users SET pass = $1 WHERE id = $2";
+  await client.query(sqlQuery1, [hashedPassword, user.id]);
+
+  res.json({ msg: "Password is changed" });
 });
 
 router.get("/mylecture", isUser, async (req, res) => {
