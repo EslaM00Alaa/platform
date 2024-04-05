@@ -141,58 +141,67 @@ router.post("/login", async (req, res) => {
 
 
 
-
-router.post("/verifycode", async (req, res) => {
-  try {
-    const { error } = validateEmail(req.body);
-    if (error) {
-      return res.status(400).json({ msg: error.details[0].message });
-    }
-     let mail = req.body.mail;
-    
-    const result =await client.query("SELECT id FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
-
-    if (result.rows.length > 0) {
-      const user = result.rows[0];
-      const randomNumber = Math.floor(1000 + Math.random() * 9000);
-      const salt = await bcrypt.genSalt(10);
-      const hashedNumber = await bcrypt.hash(randomNumber.toString(), salt);
-
-      const sqlQuery1 = "UPDATE users SET verify_code = $1 WHERE id = $2";
-      await client.query(sqlQuery1, [hashedNumber.toString().trim(), user.id]);
-
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
+   async function sendMail(mail, msg, sup) {
+  const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
           user: "onlineem936@gmail.com",
           pass: "qgqfaphmbvijlrur",
         },
-      });
+  });
+console.log(mail);
+  const mailOptions = {
+      from: "onlineem936@gmail.com",
+      to: mail,
+      subject: sup,
+      html: `<h1>${msg}</h1>`,
+  };
 
-      const mailOptions = {
-        from: "onlineem936@gmail.com",
-        to: user.mail,
-        subject: "Verify Code",
-        html: `<h1>${randomNumber}</h1>`,
-      };
-
+  return new Promise((resolve, reject) => {
       transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.log(error);
-          return res.status(500).json({ msg: "Failed to send email" });
-        } else {
-          console.log("Email sent successfully");
-          return res.json({ msg: "Email sent" });
-        }
+          if (error) {
+              console.error("Failed to send email:", error);
+              reject(error);
+          } else {
+              console.log("Email sent successfully");
+              resolve();
+          }
       });
-    } else {
-      return res.status(404).json({ msg: "No account for this user" });
-    }
+  });
+};
+
+
+router.post("/verifycode", async (req, res) => {
+  try {
+      const { error } = validateEmail(req.body);
+      if (error) {
+          return res.status(400).json({ msg: error.details[0].message });
+      }
+      let mail = req.body.mail;
+
+      const result = await client.query("SELECT id FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
+
+      if (result.rows.length > 0) {
+          const user = result.rows[0];
+          const randomNumber = Math.floor(1000 + Math.random() * 9000);
+          const salt = await bcrypt.genSalt(10);
+          const hashedNumber = await bcrypt.hash(randomNumber.toString(), salt);
+
+          const sqlQuery1 = "UPDATE users SET verify_code = $1 WHERE id = $2";
+          await client.query(sqlQuery1, [hashedNumber.toString().trim(), user.id]);
+
+          await sendMail(mail, randomNumber, "Verify Code");
+
+          return res.json({ msg: "Email sent" });
+      } else {
+          return res.status(404).json({ msg: "No account for this user" });
+      }
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ msg: "Internal server error" });
+      console.log(error);
+      return res.status(500).json({ msg: "Internal server error" });
   }
 });
+
 
 router.post("/resetpass", async (req, res) => {
   const { error } = validateChangePass({

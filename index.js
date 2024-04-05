@@ -6,7 +6,6 @@ const express = require("express"),
   cors = require("cors"),
   app = express(),
   port = process.env.PORT,
-  helmet = require("helmet"),
   client = require("./database/db");
 
 app.use(function (req, res, next) {
@@ -20,7 +19,6 @@ app.use(function (req, res, next) {
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(helmet());
 app.use(cors());
 
 app.use('/api/admin',require("./routes/admin/auth"))
