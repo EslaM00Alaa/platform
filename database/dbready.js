@@ -124,7 +124,7 @@ async function isReady() {
       `,
       `
       CREATE TABLE IF NOT EXISTS groupslecture (
-        g_id SERIAL PRIMARY KEY,
+        g_id INT REFERENCES groups (id)  ,
         l_id INT REFERENCES lecture_group (id)  ON DELETE CASCADE NOT NULL
       );
       `,
@@ -169,6 +169,7 @@ async function isReady() {
       `,
       `
       CREATE TABLE IF NOT EXISTS examssresult (
+        id SERIAL PRIMARY KEY,
         u_id INT REFERENCES users (id)  ON DELETE CASCADE NOT NULL,
         exam_id INT REFERENCES exams (id)  ON DELETE CASCADE NOT NULL,
         result INT NOT NULL
@@ -188,7 +189,64 @@ async function isReady() {
         ip VARCHAR(255) PRIMARY KEY,
         u_id INT REFERENCES users (id)  ON DELETE CASCADE
        );
+      `,
       `
+      CREATE TABLE IF NOT EXISTS user_teacher (
+        id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id),
+        teacher_id INT REFERENCES teachers(id)
+    );
+      `,
+      `
+            
+      CREATE TABLE IF NOT EXISTS lecturepdf (
+        id SERIAL PRIMARY KEY,
+        lo_id INT REFERENCES lecture_online(id),
+        lg_id INT REFERENCES lecture_group(id),
+        pdf_path VARCHAR(1000) NOT NULL,
+        pdf_name VARCHAR(255) NOT NULL
+      );
+      `,
+
+      `CREATE TABLE IF NOT EXISTS months (
+        id SERIAL PRIMARY KEY,
+        teacher_id INT NOT NULL REFERENCES teachers (id),
+        cover VARCHAR(255) NOT NULL REFERENCES covers (image_id) ON DELETE CASCADE,
+        description VARCHAR(255) NOT NULL,
+        grad_id INT NOT NULL REFERENCES grades (id) ON DELETE CASCADE,
+        days INT DEFAULT 0,
+        noflecture INT DEFAULT 0,
+        price INT  DEFAULT -1
+    );
+    `,
+      `
+    CREATE TABLE IF NOT EXISTS lectureofmonths (
+      id SERIAL PRIMARY KEY,
+      m_id  INT REFERENCES months(id),
+      lg_id INT REFERENCES lecture_group(id)
+    );
+    `,
+      `
+    CREATE TABLE IF NOT EXISTS lectureinmonths (
+      id SERIAL PRIMARY KEY,
+      lg_id INT REFERENCES lecture_group(id)
+    );
+    `,
+      `
+      CREATE TABLE IF NOT EXISTS joiningmonth (
+        id SERIAL PRIMARY KEY,
+        u_id INT REFERENCES users (id) ON DELETE CASCADE NOT NULL,
+        m_id INT REFERENCES months (id) ON DELETE CASCADE,
+        joindate DATE DEFAULT CURRENT_DATE
+    );    
+      `,
+      `
+        CREATE TABLE IF NOT EXISTS groupsmonths (
+          id SERIAL PRIMARY KEY,
+          g_id INT REFERENCES groups (id)  ,
+          m_id INT REFERENCES months (id) ON DELETE CASCADE
+        );
+        `,
     ];
 
     const tablesToCheck = [
@@ -211,8 +269,15 @@ async function isReady() {
       "codes",
       "questiones",
       "examssresult",
-       "lecturevideos"
-      , "usersip"
+      "lecturevideos",
+      "usersip",
+      "user_teacher",
+      "lecturepdf",
+      "months",
+      "lectureofmonths",
+      "lectureinmonths",
+      "joiningmonth",
+      "groupsmonths",
     ];
 
     let c = 0;

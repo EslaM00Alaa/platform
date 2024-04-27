@@ -96,4 +96,58 @@ router.put("/buylecture", isUser, async (req, res) => {
     }
   });
 
+
+////// no test 
+
+router.put("/buymonth", isUser, async (req, res) => {
+  try {
+    const { user_id, mail, m_id } = req.body;
+
+    // Fetch price and teacher_id
+    const { price, teacher_id } = (await client.query(
+      "SELECT price, teacher_id FROM months WHERE id = $1;",
+      [m_id]
+    )).rows[0];
+
+    // Fetch user's wallet value
+    const { value } = (await client.query(
+      "SELECT value FROM userwallet WHERE u_id = $1;",
+      [user_id]
+    )).rows[0];
+
+    if (price <= value) {
+      await client.query("BEGIN");
+
+      // Update userwallet
+      await client.query(
+        "UPDATE userwallet SET value = value - $1 WHERE u_id = $2;",
+        [price, user_id]
+      );
+
+      // Update teacherwallet
+      await client.query(
+        "UPDATE teacherwallet SET value = value + $1 WHERE teacher_id = $2;",
+        [price, teacher_id]
+      );
+
+      // Insert into joininglecture
+      await client.query(
+        "INSERT INTO joiningmonth (u_id, m_id) VALUES ($1, $2);",
+        [user_id, m_id]
+      );
+
+      await client.query("COMMIT");
+      sendMail(mail, `<h4>تم عمليه شراء الشهر بنجاح </h4>`);
+      res.json({ msg: "Done" });
+    } else {
+      res.status(404).json({ msg: "Insufficient funds" });
+    }
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error in buylecture endpoint:", error);
+    return res.status(500).json({ msg: "Internal Server Error" });
+  }
+});
+
+
 module.exports = router;

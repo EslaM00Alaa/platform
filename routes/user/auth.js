@@ -9,7 +9,7 @@ const express = require("express"),
     validateEmail,
     validateEmailU,
     validateChangePass,
-    validatePhone
+    validatePhone,
   } = require("../../models/user"),
   generateToken = require("../../utils/UserToken"),
   nodemailer = require("nodemailer"),
@@ -43,8 +43,11 @@ router.post("/signup", async (req, res) => {
     ]);
     const UID = result.rows[0].id,
       obj = result.rows[0];
-      await client.query("INSERT INTO userwallet (u_id) VALUES ($1) ;",[UID]);
-       await client.query("INSERT INTO usersip (ip,u_id) VALUES($1,$2) ;",[req.body.ip,UID]);
+    await client.query("INSERT INTO userwallet (u_id) VALUES ($1) ;", [UID]);
+    await client.query("INSERT INTO usersip (ip,u_id) VALUES($1,$2) ;", [
+      req.body.ip,
+      UID,
+    ]);
     res.json({
       msg: "ok you register successfully",
       token: generateToken(UID, req.body.mail),
@@ -64,8 +67,11 @@ router.put("/edit/phone", isUser, async (req, res) => {
       throw new Error(error.details[0].message);
     }
 
-    await client.query("UPDATE users SET phone = $1 WHERE id = $2;", [phone, user_id]);
-    
+    await client.query("UPDATE users SET phone = $1 WHERE id = $2;", [
+      phone,
+      user_id,
+    ]);
+
     res.json({ msg: "Phone number updated successfully" });
   } catch (error) {
     console.error("Error updating phone number:", error);
@@ -82,8 +88,11 @@ router.put("/edit/mail", isUser, async (req, res) => {
       throw new Error(error.details[0].message);
     }
 
-    await client.query("UPDATE users SET mail = $1 WHERE id = $2;", [newmail, user_id]);
-    
+    await client.query("UPDATE users SET mail = $1 WHERE id = $2;", [
+      newmail,
+      user_id,
+    ]);
+
     res.json({ msg: "mail  updated successfully" });
   } catch (error) {
     console.error("Error updating phone number:", error);
@@ -95,32 +104,46 @@ router.post("/login", async (req, res) => {
   try {
     const { error } = validateLoginUser(req.body);
     if (error) return res.status(400).json({ msg: error.details[0].message });
-     let mail = req.body.mail ;
-    let result = await client.query("SELECT * FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
+    let mail = req.body.mail;
+    let result = await client.query(
+      "SELECT * FROM users WHERE mail = $1 OR mail LIKE $2",
+      [mail, mail + " %"]
+    );
 
     if (result.rows.length > 0) {
-     
       let uid = result.rows[0].id;
-      let userIpQuery = await client.query("SELECT ip FROM usersip WHERE u_id = $1 ;", [uid]); 
+      let userIpQuery = await client.query(
+        "SELECT ip FROM usersip WHERE u_id = $1 ;",
+        [uid]
+      );
       if (userIpQuery.rows.length > 0) {
         let user_ip = userIpQuery.rows[0].ip;
-          console.log(user_ip+"     "+req.body.ip);
+        console.log(user_ip + "     " + req.body.ip);
         if (user_ip !== req.body.ip) {
-          if (user_ip === 'sata') {
+          if (user_ip === "sata") {
             console.log("change");
-            await client.query("UPDATE usersip SET ip = $1 WHERE u_id = $2;", [req.body.ip, uid]);
+            await client.query("UPDATE usersip SET ip = $1 WHERE u_id = $2;", [
+              req.body.ip,
+              uid,
+            ]);
           } else {
-            return res.status(400).json({ msg: "You must login from the same device" });
+            return res
+              .status(400)
+              .json({ msg: "You must login from the same device" });
           }
-          
         }
-      } 
-      else {
-        await client.query("INSERT INTO usersip (ip, u_id) VALUES ($1, $2) ;", [req.body.ip, uid]);
+      } else {
+        await client.query("INSERT INTO usersip (ip, u_id) VALUES ($1, $2) ;", [
+          req.body.ip,
+          uid,
+        ]);
       }
-      
-      const isPasswordMatch = await bcrypt.compare(req.body.pass, result.rows[0].pass);
-      
+
+      const isPasswordMatch = await bcrypt.compare(
+        req.body.pass,
+        result.rows[0].pass
+      );
+
       if (isPasswordMatch) {
         const { pass, verify_code, ...userData } = result.rows[0];
         return res.json({
@@ -139,66 +162,66 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
-
-   async function sendMail(mail, msg, sup) {
+async function sendMail(mail, msg, sup) {
   const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-          user: "onlineem936@gmail.com",
-          pass: "qgqfaphmbvijlrur",
-        },
+    service: "gmail",
+    auth: {
+      user: "onlineem936@gmail.com",
+      pass: "qgqfaphmbvijlrur",
+    },
   });
-console.log(mail);
+  console.log(mail);
   const mailOptions = {
-      from: "onlineem936@gmail.com",
-      to: mail,
-      subject: sup,
-      html: `<h1>${msg}</h1>`,
+    from: "onlineem936@gmail.com",
+    to: mail,
+    subject: sup,
+    html: `<h1>${msg}</h1>`,
   };
 
   return new Promise((resolve, reject) => {
-      transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-              console.error("Failed to send email:", error);
-              reject(error);
-          } else {
-              console.log("Email sent successfully");
-              resolve();
-          }
-      });
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Failed to send email:", error);
+        reject(error);
+      } else {
+        console.log("Email sent successfully");
+        resolve();
+      }
+    });
   });
-};
-
+}
 
 router.post("/verifycode", async (req, res) => {
   try {
-      const { error } = validateEmail(req.body);
-      if (error) {
-          return res.status(400).json({ msg: error.details[0].message });
-      }
-      let mail = req.body.mail;
+    const { error } = validateEmail(req.body);
+    if (error) {
+      return res.status(400).json({ msg: error.details[0].message });
+    }
+    let mail = req.body.mail;
 
-      const result = await client.query("SELECT id FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
+    const result = await client.query(
+      "SELECT id FROM users WHERE mail = $1 OR mail LIKE $2",
+      [mail, mail + " %"]
+    );
 
-      if (result.rows.length > 0) {
-          const user = result.rows[0];
-          const randomNumber = Math.floor(1000 + Math.random() * 9000);
-          const salt = await bcrypt.genSalt(10);
-          const hashedNumber = await bcrypt.hash(randomNumber.toString(), salt);
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      const randomNumber = Math.floor(1000 + Math.random() * 9000);
+      const salt = await bcrypt.genSalt(10);
+      const hashedNumber = await bcrypt.hash(randomNumber.toString(), salt);
 
-          const sqlQuery1 = "UPDATE users SET verify_code = $1 WHERE id = $2";
-          await client.query(sqlQuery1, [hashedNumber.toString().trim(), user.id]);
+      const sqlQuery1 = "UPDATE users SET verify_code = $1 WHERE id = $2";
+      await client.query(sqlQuery1, [hashedNumber.toString().trim(), user.id]);
 
-          await sendMail(mail, randomNumber, "Verify Code");
+      await sendMail(mail, randomNumber, "Verify Code");
 
-          return res.json({ msg: "Email sent" });
-      } else {
-          return res.status(404).json({ msg: "No account for this user" });
-      }
+      return res.json({ msg: "Email sent" });
+    } else {
+      return res.status(404).json({ msg: "No account for this user" });
+    }
   } catch (error) {
-      console.log(error);
-      return res.status(500).json({ msg: "Internal server error" });
+    console.log(error);
+    return res.status(500).json({ msg: "Internal server error" });
   }
 });
 
@@ -218,14 +241,20 @@ router.post("/resetpass", async (req, res) => {
   const mail = req.body.mail;
   const verifycode = req.body.code.trim(); // Trim the verify code
 
-  const result = await client.query("SELECT id, verify_code FROM users WHERE mail = $1 OR mail LIKE $2", [mail, mail + ' %']);
+  const result = await client.query(
+    "SELECT id, verify_code FROM users WHERE mail = $1 OR mail LIKE $2",
+    [mail, mail + " %"]
+  );
   const user = result.rows[0];
 
   if (!user) {
     return res.status(404).json({ msg: "User not found" }); // Handle case where user is not found
   }
 
-  const isPasswordMatch = await bcrypt.compare(verifycode, user.verify_code.trim()); // Trim the user.verify_code
+  const isPasswordMatch = await bcrypt.compare(
+    verifycode,
+    user.verify_code.trim()
+  ); // Trim the user.verify_code
   if (!isPasswordMatch) {
     return res.status(401).json({ msg: "Verify code is not correct" }); // Changed status code to 401 for unauthorized
   }
@@ -238,16 +267,15 @@ router.post("/resetpass", async (req, res) => {
 
 router.get("/mylecture", isUser, async (req, res) => {
   try {
-      let { user_id } = req.body;
-      let sql =
-          "SELECT COALESCE(cg.image, co.image) AS cover_image,lg.id, lg.description AS group_description,lo.id, lo.description AS online_description FROM joininglecture jl LEFT JOIN lecture_group lg ON jl.lgroup_id = lg.id LEFT JOIN lecture_online lo ON jl.lonline_id = lo.id LEFT JOIN covers cg ON cg.image_id = lg.cover LEFT JOIN covers co ON co.image_id = lo.cover WHERE jl.u_id = $1";
-      const result = await client.query(sql, [user_id]);
-      res.json(result.rows);
+    let { user_id } = req.body;
+    let sql =
+      "SELECT COALESCE(cg.image, co.image) AS cover_image,lg.id, lg.description AS group_description,lo.id, lo.description AS online_description FROM joininglecture jl LEFT JOIN lecture_group lg ON jl.lgroup_id = lg.id LEFT JOIN lecture_online lo ON jl.lonline_id = lo.id LEFT JOIN covers cg ON cg.image_id = lg.cover LEFT JOIN covers co ON co.image_id = lo.cover WHERE jl.u_id = $1";
+    const result = await client.query(sql, [user_id]);
+    res.json(result.rows);
   } catch (error) {
-      return res.status(500).json({ msg: "Internal server error" });
+    return res.status(500).json({ msg: "Internal server error" });
   }
 });
-
 
 router.get("/lecture/:teacherId", isUser, async (req, res) => {
   try {
@@ -255,7 +283,9 @@ router.get("/lecture/:teacherId", isUser, async (req, res) => {
     const { user_id } = req.body;
 
     // Fetch user's graduation ID
-    const grad_id = (await client.query("SELECT grad FROM users WHERE id = $1", [user_id])).rows[0].grad;
+    const grad_id = (
+      await client.query("SELECT grad FROM users WHERE id = $1", [user_id])
+    ).rows[0].grad;
 
     // Fetch all lectures by the given teacher for the user's graduation
     const lecturesQuery = `
@@ -274,7 +304,11 @@ router.get("/lecture/:teacherId", isUser, async (req, res) => {
       WHERE 
         lo.grad_id = $2 AND lo.teacher_id = $3`;
 
-    const lecturesResult = await client.query(lecturesQuery, [user_id, grad_id, teacherId]);
+    const lecturesResult = await client.query(lecturesQuery, [
+      user_id,
+      grad_id,
+      teacherId,
+    ]);
     const lecturesData = lecturesResult.rows;
 
     res.json(lecturesData);
@@ -284,52 +318,53 @@ router.get("/lecture/:teacherId", isUser, async (req, res) => {
   }
 });
 
-
 router.get("/myteacher", isUser, async (req, res) => {
   try {
     const { user_id } = req.body; // Destructure user_id directly from req.body
-    const queryResult = await client.query("SELECT grad FROM users WHERE id = $1", [user_id]);
-    
+    const queryResult = await client.query(
+      "SELECT grad FROM users WHERE id = $1",
+      [user_id]
+    );
+
     // Check if any rows were returned
     if (queryResult.rows.length === 0) {
       return res.status(404).json({ msg: "User not found" });
     }
 
     const grad_id = queryResult.rows[0].grad;
-    
-    const result = await client.query(`
-      SELECT 
-        t.id,
-        c.image,
-        t.name,
-        t.description,
-        t.mail,
-        t.subject,
-        t.whats,
-        t.facebook,
-        t.tele,
-        COUNT(lo.id) AS lecture_count 
-      FROM 
-        teachers t 
-      JOIN 
-        covers c ON t.cover = c.image_id 
-      JOIN 
-        classes cl ON cl.teacher_id = t.id 
-      LEFT JOIN 
-        lecture_online lo ON lo.teacher_id = t.id  
-      WHERE 
-        cl.grad_id = $1 AND lo.grad_id = $2
-      GROUP BY 
-        t.id, c.image, t.name, t.description, t.mail, t.subject, t.whats, t.facebook, t.tele;
-    `, [grad_id,grad_id]);
+
+    const result = await client.query(
+      `
+    SELECT 
+    t.id,
+    c.image,
+    t.name,
+    t.description,
+    t.mail,
+    t.subject,
+    t.whats,
+    t.facebook,
+    t.tele
+FROM 
+    teachers t 
+JOIN 
+    covers c ON t.cover = c.image_id 
+JOIN 
+    classes cl ON cl.teacher_id = t.id 
+WHERE 
+    cl.grad_id = $1 
+GROUP BY 
+    t.id, c.image, t.name, t.description, t.mail, t.subject, t.whats, t.facebook, t.tele
+ORDER BY 
+    t.id ASC;
+        `,
+      [grad_id]
+    );
 
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }
 });
-
-
-
 
 module.exports = router;

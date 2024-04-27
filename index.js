@@ -1,3 +1,4 @@
+const path = require("path");
 const isReady = require("./database/dbready");
 
 require("dotenv").config();
@@ -21,6 +22,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
 
+
+
+
+
 app.use('/api/admin',require("./routes/admin/auth"))
 app.use('/api/user',require("./routes/user/auth"))
 app.use('/api/teacher',require("./routes/teacher/register"))
@@ -32,6 +37,7 @@ app.use('/api/lecture',require("./routes/lectures/lecture"))
 app.use('/api/code',require("./routes/admin/mange"))
 app.use('/api/user',require("./routes/user/code"))
 app.use('/api/user',require("./routes/user/exam/exam"))
+app.use('/api/month',require("./routes/month/month"))
 
 
 

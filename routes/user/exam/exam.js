@@ -95,11 +95,11 @@ router.post("/getResult", isUser, async (req, res) => {
       }
     }
 
-    const solvedBefore = (
-      await client.query("SELECT * FROM examssresult WHERE exam_id = $1 AND u_id = $2;", [exam_id, user_id])
-    ).rows.length == 0;
+    // const solvedBefore = (
+    //   await client.query("SELECT * FROM examssresult WHERE exam_id = $1 AND u_id = $2;", [exam_id, user_id])
+    // ).rows.length == 0;
 
-    if (solvedBefore)
+    // if (solvedBefore)
       await client.query("INSERT INTO examssresult (u_id, exam_id, result) VALUES ($1, $2, $3)", [user_id, exam_id, result]);
 
     res.json({ result, total, wrongQuestions });
