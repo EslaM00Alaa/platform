@@ -113,10 +113,39 @@ router.put("/tazweeed/:monthId", isTeacher, async (req, res) => {
   }
 });
 
+
+
+
+
+
+
+
+
+
 router.delete("/:monthId", isTeacher, async (req, res) => {
   try {
     let monthId = req.params.monthId;
     let { teacher_id } = req.body;
+
+    
+    await client.query(
+      "DELETE FROM lectureofmonths WHERE m_id = $1 ;",
+      [monthId]
+    );
+
+
+    await client.query(
+      "DELETE FROM joiningmonth WHERE m_id = $1 ;",
+      [monthId]
+    );
+
+   
+    await client.query(
+      "DELETE FROM groupsmonths WHERE m_id = $1 ;",
+      [monthId]
+    );
+
+   
     await client.query(
       "DELETE FROM months WHERE id = $1 AND teacher_id = $2 ;",
       [monthId, teacher_id]
@@ -126,6 +155,12 @@ router.delete("/:monthId", isTeacher, async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 });
+
+
+
+
+
+
 
 router.get("/month/:id", isTeacher, async (req, res) => {
   try {

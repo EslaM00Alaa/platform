@@ -228,7 +228,7 @@ router.post("/openlecture/group", isTeacher, async (req, res) => {
   }
 });
 
-//  test
+
 
 //  available lecture for group
 router.post("/openmonth/group", isTeacher, async (req, res) => {
@@ -239,8 +239,11 @@ router.post("/openmonth/group", isTeacher, async (req, res) => {
       m_id,
     ]);
     let result = await client.query(
-      "SELECT u.id FROM joingroup j JOIN users u ON j.std_id = u.id WHERE j.group_id = $1",
-      [g_id]
+     `SELECT DISTINCT u.id 
+     FROM joingroup j 
+     JOIN users u ON j.std_id = u.id 
+     WHERE j.group_id = $1;
+     ` [g_id]
     );
     for (let i = 0; i < result.rows.length; i++) {
       await client.query(
@@ -307,6 +310,9 @@ router.delete("/:id", isTeacher, async (req, res) => {
     let teacher_id = req.body.teacher_id;
 
     await client.query("BEGIN"); // Start a database transaction
+  
+
+    await client.query("DELETE FROM groupsmonths WHERE g_id = $1 ;",[group_id])
 
     // Delete the records from the joingroup table first
     await client.query("DELETE FROM joingroup WHERE group_id = $1", [group_id]);
