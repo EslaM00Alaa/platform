@@ -278,11 +278,12 @@ router.get('/mymonthuser', isUser, async (req, res) => {
 
     // Fetch the months joined by the user
     let result = await client.query(
-      `SELECT m.id, c.image, m.description, m.grad_id, m.noflecture, m.price
-       FROM months m
-       INNER JOIN joiningmonth jm ON m.id = jm.m_id
-       JOIN covers c ON m.cover = c.image_id
-       WHERE jm.u_id = $1 AND (CURRENT_DATE - jm.joindate) <= m.days OR m.days = 0  ;`,
+      `SELECT DISTINCT m.id, c.image, m.description, m.grad_id, m.noflecture, m.price
+      FROM months m
+      INNER JOIN joiningmonth jm ON m.id = jm.m_id
+      JOIN covers c ON m.cover = c.image_id
+      WHERE jm.u_id = $1 AND (CURRENT_DATE - jm.joindate) <= m.days OR m.days = 0;
+      `,      
       [user_id]
     );
 
