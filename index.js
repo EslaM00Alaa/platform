@@ -70,13 +70,6 @@ app.get('/dealltable', async (req, res) => {
 
 
 client.connect().then(async() => {
-  await client.query(`CREATE TABLE IF NOT EXISTS examssresult (
-    id SERIAL PRIMARY KEY,
-    u_id INT REFERENCES users (id) ON DELETE CASCADE NOT NULL,
-    exam_id INT REFERENCES exams (id) ON DELETE CASCADE NOT NULL,
-    result INT NOT NULL
-);
-`)
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
   await isReady();
