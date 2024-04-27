@@ -272,18 +272,41 @@ router.get('/teacher/:id', isUser, async (req, res) => {
 
 // no handel time  and 
 
+
+// router.get('/mymonthuser', isUser, async (req, res) => {
+//   try {
+//     const { user_id } = req.body;
+
+//     // Fetch the months joined by the user
+//     let result = await client.query(
+//       `SELECT DISTINCT m.id, c.image, m.description, m.grad_id, m.noflecture, m.price
+//        FROM months m
+//        JOIN joiningmonth jm ON m.id = jm.m_id AND jm.u_id = $1
+//        JOIN covers c ON m.cover = c.image_id
+//        WHERE jm.u_id = $2 AND (CURRENT_DATE - jm.joindate) <= m.days OR m.days = 0;
+//       `,      
+//       [user_id,user_id]
+//     );
+
+//     res.json(result.rows);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ msg: "Internal server error." });
+//   }
+// });
+
 router.get('/mymonthuser', isUser, async (req, res) => {
   try {
     const { user_id } = req.body;
 
     // Fetch the months joined by the user
-    let result = await client.query(
+    const result = await client.query(
       `SELECT DISTINCT m.id, c.image, m.description, m.grad_id, m.noflecture, m.price
        FROM months m
-       JOIN joiningmonth jm ON m.id = jm.m_id
+       JOIN joiningmonth jm ON m.id = jm.m_id AND jm.u_id = $1
        JOIN covers c ON m.cover = c.image_id
        WHERE jm.u_id = $1 AND (CURRENT_DATE - jm.joindate) <= m.days OR m.days = 0;
-      `,      
+      `,
       [user_id]
     );
 
@@ -293,8 +316,6 @@ router.get('/mymonthuser', isUser, async (req, res) => {
     res.status(500).json({ msg: "Internal server error." });
   }
 });
-
-
 
 // router.get('/monthinfo/:id', isUser, async (req, res) => {
 //   try {
