@@ -231,19 +231,20 @@ router.post("/openlecture/group", isTeacher, async (req, res) => {
 
 
 //  available lecture for group
+
 router.post("/openmonth/group", isTeacher, async (req, res) => {
   try {
     let { m_id, g_id } = req.body;
-    await client.query("INSERT INTO groupsmonths (g_id,m_id) VALUES ($1,$2);", [
+    await client.query("INSERT INTO groupsmonths (g_id, m_id) VALUES ($1, $2);", [
       g_id,
       m_id,
     ]);
     let result = await client.query(
-     `SELECT DISTINCT u.id 
-     FROM joingroup j 
-     JOIN users u ON j.std_id = u.id 
-     WHERE j.group_id = $1;
-     ` [g_id]
+      `SELECT DISTINCT u.id 
+       FROM joingroup j 
+       JOIN users u ON j.std_id = u.id 
+       WHERE j.group_id = $1;`,
+      [g_id] // Pass the value for the placeholder $1
     );
     for (let i = 0; i < result.rows.length; i++) {
       await client.query(
@@ -269,7 +270,7 @@ router.delete("/remove", isTeacher, async (req, res) => {
           group_id,
         ])
       ).rows;
-
+    
       for (let i = 0; i < monthsgroup.length; i++) {
         await client.query(
           "DELETE FROM joiningmonth WHERE u_id = $1 AND m_id = $2",

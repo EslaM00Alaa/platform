@@ -72,7 +72,7 @@ app.get('/dealltable', async (req, res) => {
 client.connect().then(async() => {
 
 
-  //await client.query("DELETE FROM lectureinmonths; DELETE FROM joiningmonth; DELETE FROM groupsmonths; DELETE FROM lectureofmonths; DELETE FROM months;")
+  await client.query("DELETE FROM lectureinmonths; DELETE FROM joiningmonth; DELETE FROM groupsmonths; DELETE FROM lectureofmonths; DELETE FROM months;")
 
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
