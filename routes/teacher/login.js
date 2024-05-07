@@ -1,13 +1,20 @@
 
 const express = require("express"),
   client = require("../../database/db"),
-  {validateLoginTeacher,validateEmail,validateChangePass} = require("../../models/teacher")
+  {validateLoginTeacher,validateEmail,validateChangePass} = require("../../models/teacher");
+const isTeacher = require("../../middleware/isTeacher");
   generateToken = require("../../utils/UserToken"),
   nodemailer = require("nodemailer"),
   bcrypt = require("bcryptjs"),
   router = express.Router();
 
-
+  const {
+    cloadinaryUploadImage,
+    cloadinaryRemoveImage,
+  } = require("../../utils/uploadimageCdn"),
+  fs = require("fs") ;
+const photoUpload = require("../../utils/uploadimage");
+const path = require("path");
   
 
 router.post("/login", async (req, res) => {
@@ -24,6 +31,7 @@ router.post("/login", async (req, res) => {
           result.rows[0].pass
         );
         obj.role="teacher";
+  
         if (isPasswordMatch)
           return res.json({
             token: generateToken(result.rows[0].id, result.rows[0].mail),
@@ -37,7 +45,41 @@ router.post("/login", async (req, res) => {
       return res.status(404).json({ msg: error.message });
     }
   });
+
+
+  router.put('/updateprofile', [photoUpload.single('image'),isTeacher],async (req, res) => {
+    try {
+      let id = req.body.teacher_id;
   
+      if (!req.file) {
+        return res.status(400).json({ message: 'You must send images' });
+      }
+  
+     
+    const imagePath = path.join(__dirname, `../../images/${req.file.filename}`);
+    const uploadResult = await cloadinaryUploadImage(imagePath); // Assuming you have a function named 'cloadinaryUploadImage' to upload the image asynchronously
+    const { public_id, secure_url } = uploadResult;
+
+      fs.unlink(imagePath, (err) => {
+      if (err) {
+        console.error("Error deleting image:", err);
+      }})
+    
+      await client.query('INSERT INTO covers (image_id, image) VALUES ($1, $2);', [public_id, secure_url]);
+      const result = await client.query('UPDATE teachers SET cover = $1 WHERE id = $2 ;', [public_id, id]);
+     
+      
+      return res.status(200).json({ message: 'Update successful' });
+    } catch (error) {
+      // Handle errors appropriately
+      console.error(error);
+      return res.status(500).json({ msg: 'Internal Server Error' });
+    }
+  });
+  
+  
+
+
   router.post("/verifycode", async (req, res) => {
     try {
       const { error } = validateEmail(req.body);

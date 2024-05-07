@@ -412,9 +412,9 @@ router.get('/monthinfo/:id', isUser, async (req, res) => {
 
     const result = await client.query(sql, [m_id]);
 
-    const openFlags = []; // Array to store the open flags
+    const openFlags = [true]; // Array to store the open flags
 
-    for (let i = 0; i < result.rows.length; i++) {
+    for (let i = 1; i < result.rows.length; i++) {
       const lg_id = result.rows[i].id;
       let flag = true;
 
