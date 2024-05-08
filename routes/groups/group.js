@@ -278,18 +278,18 @@ router.delete("/remove", isTeacher, async (req, res) => {
         );
       }
 
-      let lecturesgroup = (
-        await client.query("SELECT l_id FROM groupslecture WHERE g_id = $1", [
-          group_id,
-        ])
-      ).rows;
+      // let lecturesgroup = (
+      //   await client.query("SELECT l_id FROM groupslecture WHERE g_id = $1", [
+      //     group_id,
+      //   ])
+      // ).rows;
 
-      for (let i = 0; i < lecturesgroup.length; i++) {
-        await client.query(
-          "DELETE FROM joininglecture WHERE u_id = $1 AND l_id = $2",
-          [std_id, lecturesgroup[i].l_id]
-        );
-      }
+      // for (let i = 0; i < lecturesgroup.length; i++) {
+      //   await client.query(
+      //     "DELETE FROM joininglecture WHERE u_id = $1 AND l_id = $2",
+      //     [std_id, lecturesgroup[i].l_id]
+      //   );
+      // }
 
       await client.query(
         "DELETE FROM joingroup WHERE group_id = $1 AND std_id = $2",

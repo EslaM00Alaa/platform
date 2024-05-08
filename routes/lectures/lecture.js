@@ -81,6 +81,47 @@ router.post(
     }
   }
 );
+    // { image : " " , name } 
+router.put(
+  "/update",
+  photoUpload.single("image"),
+  isTeacher,
+  async (req, res) => {
+    try {
+      let teacher_id = req.body.teacher_id;
+      if (req.file) {
+        const imagePath = path.join(
+          __dirname,
+          `../../images/${req.file.filename}`
+        );
+        const uploadResult = await cloadinaryUploadImage(imagePath); // Assuming you have a function named 'cloadinaryUploadImage' to upload the image asynchronously
+        const { public_id, secure_url } = uploadResult;
+
+        await client.query("BEGIN"); // Start a database transaction
+
+        await client.query(
+          "INSERT INTO covers(image_id, image) VALUES ($1, $2);",
+          [public_id, secure_url]
+        );
+        await client.query("UPDATE teachers SET cover = $1 WHERE id = $2 ; ", [
+          public_id,
+          teacher_id,
+        ]);
+      }
+
+      if (req.body.name) {
+        let name = req.body.name;
+
+        await client.query("UPDATE teachers SET name = $1 WHERE id = $2 ; ", [
+          name,
+          teacher_id,
+        ]);
+      }
+    } catch (error) {
+      res.status(500).json({ msg: error.message });
+    }
+  }
+);
 
 router.get("/group", isTeacher, async (req, res) => {
   try {
@@ -224,7 +265,6 @@ router.get("/lectureonline/:lo_id", isUser, async (req, res) => {
   }
 });
 
-
 router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
   try {
     const { lg_id } = req.params; // Corrected variable name from lo_id to lg_id
@@ -266,7 +306,6 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 });
-
 
 router.get("/lecturemonth/:lg_id", isUser, async (req, res) => {
   try {
@@ -310,17 +349,18 @@ router.get("/lecturemonth/:lg_id", isUser, async (req, res) => {
   }
 });
 
-
 router.get("/videom/:id", isUser, async (req, res) => {
   try {
     const vid = req.params.id;
     const { user_id } = req.body;
 
-    let lg_ar = (await client.query('SELECT lg_id FROM lecturevideos WHERE id = $1',[vid])).rows;
+    let lg_ar = (
+      await client.query("SELECT lg_id FROM lecturevideos WHERE id = $1", [vid])
+    ).rows;
 
-    let flag = false ;
+    let flag = false;
 
-    for(let lg_id of lg_ar) {
+    for (let lg_id of lg_ar) {
       const permissionCheckQuery = {
         text: "SELECT l.id FROM lectureofmonths l JOIN joiningmonth jm ON l.m_id = jm.m_id AND jm.u_id = $1 WHERE l.lg_id = $2;",
         values: [user_id, lg_id.lg_id],
@@ -329,12 +369,12 @@ router.get("/videom/:id", isUser, async (req, res) => {
       const permissionResult = await client.query(permissionCheckQuery);
 
       if (permissionResult.rows.length > 0) {
-        flag = true ;
+        flag = true;
         break;
       }
     }
 
-    if(!flag) {
+    if (!flag) {
       return res.status(404).json({
         msg: "You do not have permission to access this lecture content.",
       });
@@ -357,9 +397,6 @@ router.get("/videom/:id", isUser, async (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 });
-
-
-
 
 router.get("/video/:id", isUser, async (req, res) => {
   try {
