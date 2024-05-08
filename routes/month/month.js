@@ -208,6 +208,12 @@ router.delete("/lecture/lecturefrommonth", isTeacher, async (req, res) => {
       [l_id, m_id]
     );
 
+    await client.query(
+      "DELETE FROM lecture_group WHERE id = $1;",
+      [l_id]
+    );
+
+
     res.json({ msg: "One lecture deleted from the month." });
   } catch (error) {
     console.error(
