@@ -254,6 +254,7 @@ router.delete("/:id", isAdmin, async (req, res) => {
 });
 
 
+
 router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
   try {
     let exam_id = req.params.examId;
@@ -261,11 +262,11 @@ router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
       await client.query("SELECT name FROM exams WHERE id = $1;", [exam_id])
     ).rows[0].name;
     let query = `
-    SELECT DISTINCT ON (u.id) u.fName, u.lName, u.mail, u.phone, er.result 
+    SELECT u.id, u.fName, u.lName, u.mail, u.phone, er.result 
     FROM users u 
-    JOIN examssresult er ON er.u_id = u.id 
+    JOIN examsresult er ON er.u_id = u.id 
     WHERE er.exam_id = $1
-    ORDER BY u.id, er.id ASC;
+    ORDER BY u.id ASC, er.id ASC;
     `;
     let result = await client.query(query, [exam_id]);
 
@@ -280,5 +281,8 @@ router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 });
+
+
+
 
 module.exports = router;
