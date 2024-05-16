@@ -265,7 +265,6 @@ router.delete("/:id", isAdmin, async (req, res) => {
 
 
 
-
 router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
   try {
     let exam_id = req.params.examId;
@@ -273,7 +272,7 @@ router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
       await client.query("SELECT name FROM exams WHERE id = $1;", [exam_id])
     ).rows[0].name;
     let query = `
-    SELECT u.id, u.fName, u.lName, u.mail, u.phone, er.result 
+    SELECT u.id, u.fName, u.lName, u.mail, u.phone, er.result, er.id as er_id
     FROM users u 
     JOIN examssresult er ON er.u_id = u.id 
     WHERE er.exam_id = $1
@@ -292,6 +291,7 @@ router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 });
+
 
 
 
