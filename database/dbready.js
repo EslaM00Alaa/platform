@@ -168,7 +168,7 @@ async function isReady() {
       );
       `,
       `
-      CREATE TABLE IF NOT EXISTS examssresult (
+      CREATE TABLE IF NOT EXISTS exaresult (
         id SERIAL PRIMARY KEY,
         u_id INT REFERENCES users (id)  ON DELETE CASCADE NOT NULL,
         exam_id INT REFERENCES exams (id)  ON DELETE CASCADE NOT NULL,
@@ -268,7 +268,7 @@ async function isReady() {
       "teacherwallet",
       "codes",
       "questiones",
-      "examssresult",
+      "exaresult",
       "lecturevideos",
       "usersip",
       "user_teacher",
