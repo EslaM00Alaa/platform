@@ -277,7 +277,7 @@ router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
     FROM users u 
     JOIN exaresult er ON er.u_id = u.id 
     WHERE er.exam_id = $1
-    ORDER BY u.id, er.result DESC, er.id ASC;
+    ORDER BY u.id, er.id ASC;
     `;
     let result = await client.query(query, [exam_id]);
 
