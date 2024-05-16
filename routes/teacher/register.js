@@ -273,7 +273,7 @@ router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
     ).rows[0].name;
 
     let query = `
-    SELECT u.id, u.fName, u.lName, u.mail, u.phone, er.result, er.id as er_id
+    SELECT u.id, u.fName, u.lName, u.mail, u.phone, er.result
     FROM users u 
     JOIN examssresult er ON er.u_id = u.id 
     WHERE er.exam_id = $1
