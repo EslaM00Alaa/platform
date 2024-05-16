@@ -73,12 +73,17 @@ client.connect().then(async() => {
 
 
  // await client.query("DELETE FROM lectureinmonths; DELETE FROM joiningmonth; DELETE FROM groupsmonths; DELETE FROM lectureofmonths; DELETE FROM months;")
-  await client.query(`ALTER TABLE lectureofmonths
-  DROP CONSTRAINT IF EXISTS lectureofmonths_m_id_fkey,
-  ADD CONSTRAINT lectureofmonths_m_id_fkey
-  FOREIGN KEY (m_id)
-  REFERENCES months(id)
-  ON DELETE CASCADE;`)
+  await client.query(`
+ 
+  ALTER TABLE lectureofmonths
+ DROP CONSTRAINT IF EXISTS lectureofmonths_m_id_fkey;
+
+ALTER TABLE lectureofmonths
+ADD CONSTRAINT lectureofmonths_m_id_fkey
+FOREIGN KEY (m_id)
+REFERENCES months(id)
+ON DELETE CASCADE;
+  `)
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
   await isReady();
