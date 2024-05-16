@@ -223,6 +223,10 @@ router.delete("/:id", isAdmin, async (req, res) => {
 
       // Delete related records from the 'classes' table
       await client.query("DELETE FROM classes WHERE teacher_id = $1", [id]);
+      await client.query("DELETE FROM groups WHERE teacher_id = $1", [id]);
+      await client.query("DELETE FROM months WHERE teacher_id = $1", [id]);
+      await client.query("DELETE FROM lecture_online WHERE teacher_id = $1", [id]);
+      await client.query("DELETE FROM lecture_group WHERE teacher_id = $1", [id]);
 
       // Delete the teacher from the 'teachers' table
       const result = await client.query(
