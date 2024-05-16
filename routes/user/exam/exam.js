@@ -100,7 +100,7 @@ router.post("/getResult", isUser, async (req, res) => {
     // ).rows.length == 0;
 
     // if (solvedBefore)
-      await client.query("INSERT INTO examssresult (u_id, exam_id, result) VALUES ($1, $2, $3)", [user_id, exam_id, result]);
+      await client.query("INSERT INTO exaresult (u_id, exam_id, result) VALUES ($1, $2, $3)", [user_id, exam_id, result]);
 
     res.json({ result, total, wrongQuestions });
   } catch (error) {
