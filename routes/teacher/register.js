@@ -273,11 +273,12 @@ router.get("/allresultofexam/:examId", isTeacher, async (req, res) => {
     ).rows[0].name;
 
     let query = `
-    SELECT u.id, u.fName, u.lName, u.mail, u.phone, er.result
+    SELECT DISTINCT ON (u.id) u.id, u.fName, u.lName, u.mail, u.phone, er.result
     FROM users u 
     JOIN examssresult er ON er.u_id = u.id 
     WHERE er.exam_id = $1
-    ORDER BY u.id ASC ;
+    ORDER BY u.id, er.result DESC;
+
     `;
     let result = await client.query(query, [exam_id]);
 
