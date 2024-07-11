@@ -243,7 +243,7 @@ async function isReady() {
       `
         CREATE TABLE IF NOT EXISTS groupsmonths (
           id SERIAL PRIMARY KEY,
-          g_id INT REFERENCES groups (id)  ,
+          g_id INT REFERENCES groups (id) ON DELETE CASCADE  ,
           m_id INT REFERENCES months (id) ON DELETE CASCADE
         );
         `,
