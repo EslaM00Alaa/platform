@@ -13,6 +13,64 @@ const express = require("express"),
   router = express.Router();
 const isUser = require("../../middleware/isUser.js");
 
+
+
+
+
+
+
+
+
+router.get('/free', isUser, async (req, res) => {
+  try {
+    const { user_id } = req.body; // Change to req.params if more appropriate
+
+    const result = await client.query(
+      `SELECT 
+          m.id, 
+          open = true, 
+          COALESCE(c.image, '') AS image, 
+          m.description, 
+          m.noflecture, 
+          m.price 
+       FROM 
+          users u
+       JOIN 
+          months m ON m.grad_id = u.grad
+       LEFT JOIN 
+          covers c ON c.image_id = m.cover
+       WHERE 
+          u.id = $1 AND m.price = 0;`,
+      [user_id]
+    );
+
+    res.json({ months: result.rows });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Internal server error." });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 router.post(
   "/add",
   photoUpload.single("image"),
@@ -274,35 +332,7 @@ router.get('/teacher/:id', isUser, async (req, res) => {
   }
 });
 
-router.get('/free', isUser, async (req, res) => {
-  try {
-    const { user_id } = req.body; // Change to req.params if more appropriate
 
-    const result = await client.query(
-      `SELECT 
-          m.id, 
-          open = true, 
-          COALESCE(c.image, '') AS image, 
-          m.description, 
-          m.noflecture, 
-          m.price 
-       FROM 
-          users u
-       JOIN 
-          months m ON m.grad_id = u.grad
-       LEFT JOIN 
-          covers c ON c.image_id = m.cover
-       WHERE 
-          u.id = $1 AND m.price = 0;`,
-      [user_id]
-    );
-
-    res.json({ months: result.rows });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Internal server error." });
-  }
-});
 
 
 router.get('/mymonthuser', isUser, async (req, res) => {
