@@ -274,7 +274,7 @@ router.get('/teacher/:id', isUser, async (req, res) => {
   }
 });
 
-router.get('/months/free', isUser, async (req, res) => {
+router.get('/free', isUser, async (req, res) => {
   try {
     const { user_id } = req.body; // Change to req.params if more appropriate
 
