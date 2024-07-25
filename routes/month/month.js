@@ -21,7 +21,7 @@ const isUser = require("../../middleware/isUser.js");
 
 
 
-router.get('/free', isUser, async (req, res) => {
+router.get('/', isUser, async (req, res) => {
   try {
     const { user_id } = req.body; // Change to req.params if more appropriate
 
