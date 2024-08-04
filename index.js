@@ -25,7 +25,9 @@ app.use(cors());
 
 
 
-
+app.get('/',(req,res)=>{
+  res.send('hello sata ') ;
+})
 app.use('/api/admin',require("./routes/admin/auth"))
 app.use('/api/user',require("./routes/user/auth"))
 app.use('/api/teacher',require("./routes/teacher/register"))
