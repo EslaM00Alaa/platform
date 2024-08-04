@@ -7,7 +7,7 @@ function validateUser(obj)
     const schema = joi.object({
         fName:joi.string().trim().required(),
         lName:joi.string().trim().required(),
-        mail:joi.string().trim().required().email(),
+        mail:joi.string().trim().required(),
         pass:joi.string().trim().max(300).required(),
         lastVerifyCode:joi.string().trim(),
         phone:joi.string().trim(),

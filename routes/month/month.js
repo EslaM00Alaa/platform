@@ -13,34 +13,33 @@ const express = require("express"),
   router = express.Router();
 const isUser = require("../../middleware/isUser.js");
 
-
-
-
-
-
-
-
-
-router.get('/free', isUser, async (req, res) => {
+router.get("/free", isUser, async (req, res) => {
   try {
     const { user_id } = req.body; // Change to req.params if more appropriate
 
     const result = await client.query(
       `SELECT 
           m.id, 
-          open = true, 
           COALESCE(c.image, '') AS image, 
           m.description, 
           m.noflecture, 
-          m.price 
+          m.price,
+          CASE 
+            WHEN jm.id IS NOT NULL AND ((CURRENT_DATE - jm.joindate) <= m.days OR m.days = 0) THEN TRUE 
+            ELSE FALSE 
+          END AS open
        FROM 
-          users u
-       JOIN 
-          months m ON m.grad_id = u.grad
+          months m 
        LEFT JOIN 
-          covers c ON c.image_id = m.cover
+          covers c ON c.image_id = m.cover  
+       LEFT JOIN 
+          joiningmonth jm ON m.id = jm.m_id AND jm.u_id = $1 
        WHERE 
-          u.id = $1 AND m.price = 0;`,
+          m.price = 0 AND m.grad_id = (
+            SELECT grad 
+            FROM users 
+            WHERE id = $1
+          );`,
       [user_id]
     );
 
@@ -50,26 +49,6 @@ router.get('/free', isUser, async (req, res) => {
     res.status(500).json({ msg: "Internal server error." });
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 router.post(
   "/add",
@@ -102,7 +81,7 @@ router.post(
         [public_id, secure_url]
       );
 
-      if (price>=0) {
+      if (price >= 0) {
         await client.query(
           "INSERT INTO months (teacher_id,cover,description,grad_id,days,price)VALUES($1,$2,$3,$4,$5,$6);",
           [teacher_id, public_id, description, grad_id, days, price]
@@ -171,39 +150,19 @@ router.put("/tazweeed/:monthId", isTeacher, async (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
-
-
 router.delete("/:monthId", isTeacher, async (req, res) => {
   try {
     let monthId = req.params.monthId;
     let { teacher_id } = req.body;
 
-    
-    await client.query(
-      "DELETE FROM lectureofmonths WHERE m_id = $1 ;",
-      [monthId]
-    );
+    await client.query("DELETE FROM lectureofmonths WHERE m_id = $1 ;", [
+      monthId,
+    ]);
 
+    await client.query("DELETE FROM joiningmonth WHERE m_id = $1 ;", [monthId]);
 
-    await client.query(
-      "DELETE FROM joiningmonth WHERE m_id = $1 ;",
-      [monthId]
-    );
+    await client.query("DELETE FROM groupsmonths WHERE m_id = $1 ;", [monthId]);
 
-   
-    await client.query(
-      "DELETE FROM groupsmonths WHERE m_id = $1 ;",
-      [monthId]
-    );
-
-   
     await client.query(
       "DELETE FROM months WHERE id = $1 AND teacher_id = $2 ;",
       [monthId, teacher_id]
@@ -214,12 +173,6 @@ router.delete("/:monthId", isTeacher, async (req, res) => {
   }
 });
 
-
-
-
-
-
-
 router.get("/month/:id", isTeacher, async (req, res) => {
   try {
     const { teacher_id } = req.body; // Assuming teacher_id is in req.user instead of req.body
@@ -229,7 +182,7 @@ router.get("/month/:id", isTeacher, async (req, res) => {
     SELECT  m.id , c.image , m.description , m.noflecture FROM months m LEFT JOIN covers c ON c.image_id = m.cover WHERE  m.id = $1
   `;
 
-    const result1 = await client.query(sql1, [ monthId]);
+    const result1 = await client.query(sql1, [monthId]);
 
     const sql = `
       SELECT lg.id, c.image, lg.description
@@ -241,7 +194,7 @@ router.get("/month/:id", isTeacher, async (req, res) => {
     `;
 
     const result = await client.query(sql, [teacher_id, monthId]);
-    res.json({monthData:result1.rows[0],monthcontent:result.rows});
+    res.json({ monthData: result1.rows[0], monthcontent: result.rows });
   } catch (error) {
     console.error(
       "Error occurred while retrieving lectures for the month:",
@@ -250,7 +203,6 @@ router.get("/month/:id", isTeacher, async (req, res) => {
     res.status(500).json({ msg: "Internal server error." });
   }
 });
-
 
 router.delete("/lecture/lecturefrommonth", isTeacher, async (req, res) => {
   try {
@@ -266,11 +218,7 @@ router.delete("/lecture/lecturefrommonth", isTeacher, async (req, res) => {
       [l_id, m_id]
     );
 
-    await client.query(
-      "DELETE FROM lecture_group WHERE id = $1;",
-      [l_id]
-    );
-
+    await client.query("DELETE FROM lecture_group WHERE id = $1;", [l_id]);
 
     res.json({ msg: "One lecture deleted from the month." });
   } catch (error) {
@@ -282,31 +230,21 @@ router.delete("/lecture/lecturefrommonth", isTeacher, async (req, res) => {
   }
 });
 
+// get all month to teacher
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// get all month to teacher  
-
-router.get('/teacher/:id', isUser, async (req, res) => {
+router.get("/teacher/:id", isUser, async (req, res) => {
   try {
     const { user_id } = req.body;
     let teacher_id = req.params.id;
 
-    let teacher = await client.query("select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele   from teachers t join covers c on t.cover = c.image_id  WHERE t.id = $1 ; ",[teacher_id]);
+    let teacher = await client.query(
+      "select t.id ,c.image ,t.name, t.description , t.mail , t.subject , t.whats ,t.facebook, t.tele   from teachers t join covers c on t.cover = c.image_id  WHERE t.id = $1 ; ",
+      [teacher_id]
+    );
 
-    let grad = (await client.query("SELECT grad FROM users WHERE id = $1;", [user_id])).rows[0].grad;
+    let grad = (
+      await client.query("SELECT grad FROM users WHERE id = $1;", [user_id])
+    ).rows[0].grad;
 
     let result2 = await client.query(
       `SELECT m.id, 
@@ -325,17 +263,14 @@ router.get('/teacher/:id', isUser, async (req, res) => {
       [user_id, teacher_id, grad]
     );
 
-    res.json({teacher:teacher.rows[0],months:result2.rows});
+    res.json({ teacher: teacher.rows[0], months: result2.rows });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: "Internal server error." });
   }
 });
 
-
-
-
-router.get('/mymonthuser', isUser, async (req, res) => {
+router.get("/mymonthuser", isUser, async (req, res) => {
   try {
     const { user_id } = req.body;
 
@@ -372,9 +307,9 @@ router.get('/mymonthuser', isUser, async (req, res) => {
 //     }
 
 //     const sql1 = `
-//       SELECT m.id, c.image, m.description, m.noflecture 
-//       FROM months m 
-//       LEFT JOIN covers c ON c.image_id = m.cover 
+//       SELECT m.id, c.image, m.description, m.noflecture
+//       FROM months m
+//       LEFT JOIN covers c ON c.image_id = m.cover
 //       WHERE m.id = $1;
 //     `;
 //     const result1 = await client.query(sql1, [m_id]);
@@ -395,7 +330,7 @@ router.get('/mymonthuser', isUser, async (req, res) => {
 //       const lg_id = result.rows[i - 1].id;
 //       let flag = true;
 //       const exam_id = (await client.query("SELECT exam_id FROM lecture_group WHERE id = $1;", [lg_id])).rows[0].exam_id;
-      
+
 //       if (exam_id) {
 //         const number = (await client.query("SELECT number FROM exams WHERE id = $1;", [exam_id])).rows[0].number;
 //         const resultsofexam = await client.query("SELECT result FROM examssresult WHERE u_id = $1 AND exam_id = $2;", [user_id, exam_id]);
@@ -417,9 +352,7 @@ router.get('/mymonthuser', isUser, async (req, res) => {
 //   }
 // });
 
-
-
-router.get('/monthinfo/:id', isUser, async (req, res) => {
+router.get("/monthinfo/:id", isUser, async (req, res) => {
   try {
     const m_id = req.params.id;
     const { user_id } = req.body; // Assuming user_id is coming from the request body
@@ -428,7 +361,10 @@ router.get('/monthinfo/:id', isUser, async (req, res) => {
       return res.status(400).json({ msg: "User ID is required." });
     }
 
-    const resss = await client.query("SELECT * FROM joiningmonth WHERE u_id = $1 AND m_id = $2;", [user_id, m_id]);
+    const resss = await client.query(
+      "SELECT * FROM joiningmonth WHERE u_id = $1 AND m_id = $2;",
+      [user_id, m_id]
+    );
     if (resss.rows.length === 0) {
       return res.status(404).json({ msg: "YOU DON'T HAVE PERMISSION" });
     }
@@ -455,22 +391,31 @@ router.get('/monthinfo/:id', isUser, async (req, res) => {
     const openFlags = [true]; // Array to store the open flags
 
     for (let i = 1; i < result.rows.length; i++) {
-      const lg_id = result.rows[i].id;
+      const lg_id = result.rows[i-1].id;
       let flag = true;
 
-      const exam_id_res = await client.query("SELECT exam_id FROM lecture_group WHERE id = $1;", [lg_id]);
+      const exam_id_res = await client.query(
+        "SELECT exam_id FROM lecture_group WHERE id = $1;",
+        [lg_id]
+      );
       const exam_id = exam_id_res.rows[0]?.exam_id;
 
       if (exam_id) {
-        const number_res = await client.query("SELECT number FROM exams WHERE id = $1;", [exam_id]);
+        const number_res = await client.query(
+          "SELECT number FROM exams WHERE id = $1;",
+          [exam_id]
+        );
         const number = number_res.rows[0]?.number;
 
-        const resultsofexam = await client.query("SELECT result FROM examssresult WHERE u_id = $1 AND exam_id = $2;", [user_id, exam_id]);
+        const resultsofexam = await client.query(
+          "SELECT result FROM examssresult WHERE u_id = $1 AND exam_id = $2;",
+          [user_id, exam_id]
+        );
 
         flag = false;
         for (let j = 0; j < resultsofexam.rows.length; j++) {
           const resultofexam = resultsofexam.rows[j].result;
-          if (resultofexam >= (number / 2)) {
+          if (resultofexam >= number / 2) {
             flag = true;
             break; // Break the loop once a passing result is found
           }
@@ -490,32 +435,6 @@ router.get('/monthinfo/:id', isUser, async (req, res) => {
     res.status(500).json({ msg: "Internal server error." });
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
