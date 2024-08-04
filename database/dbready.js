@@ -31,7 +31,7 @@ async function isReady() {
         lName VARCHAR(255) NOT NULL,
         verify_code VARCHAR(255),
         mail VARCHAR(255) NOT NULL UNIQUE,
-        pass VARCHAR(255) NOT NULL UNIQUE,
+        pass VARCHAR(255) NOT NULL ,
         phone VARCHAR(255) NOT NULL,
         grad INT NOT NULL
       );

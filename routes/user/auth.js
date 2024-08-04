@@ -106,8 +106,8 @@ router.post("/login", async (req, res) => {
     if (error) return res.status(400).json({ msg: error.details[0].message });
     let mail = req.body.mail;
     let result = await client.query(
-      "SELECT * FROM users WHERE mail = $1 OR mail LIKE $2",
-      [mail, mail + " %"]
+      "SELECT * FROM users WHERE mail = $1 OR mail LIKE $2 OR phone = $3",
+      [mail, mail + " %",mail]
     );
 
     if (result.rows.length > 0) {
