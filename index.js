@@ -40,6 +40,7 @@ app.use('/api/code',require("./routes/admin/mange"))
 app.use('/api/user',require("./routes/user/code"))
 app.use('/api/user',require("./routes/user/exam/exam"))
 app.use('/api/month',require("./routes/month/month"))
+app.use('/api/teachercode',require("./routes/codeTeacher/newcode"))
 
 
 
