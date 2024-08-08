@@ -247,6 +247,16 @@ async function isReady() {
           m_id INT REFERENCES months (id) ON DELETE CASCADE
         );
         `,
+        `
+        CREATE TABLE IF NOT EXISTS teachercode (
+        id SERIAL PRIMARY KEY,
+        code VARCHAR(300),
+        teacher_id INT REFERENCES teachers(id),
+        used BOOLEAN DEFAULT false
+       );
+        `,
+
+
     ];
 
     const tablesToCheck = [
@@ -278,6 +288,7 @@ async function isReady() {
       "lectureinmonths",
       "joiningmonth",
       "groupsmonths",
+      "teachercode"
     ];
 
     let c = 0;

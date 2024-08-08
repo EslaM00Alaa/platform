@@ -41,6 +41,11 @@ router.post("/signup", async (req, res) => {
       req.body.phone,
       req.body.grad,
     ]);
+
+
+
+
+
     const UID = result.rows[0].id,
       obj = result.rows[0];
     await client.query("INSERT INTO userwallet (u_id) VALUES ($1) ;", [UID]);
@@ -48,11 +53,24 @@ router.post("/signup", async (req, res) => {
       req.body.ip,
       UID,
     ]);
-    res.json({
+
+
+    
+    let userdata = await client.query(
+      "SELECT * FROM users WHERE mail = $1 OR mail LIKE $2 OR phone = $3",
+      [mail, mail + " %", mail]
+    );
+
+
+    const { pass, verify_code, ...userData } = userdata.rows[0];
+
+
+    return res.json({
       msg: "ok you register successfully",
-      token: generateToken(UID, req.body.mail),
-      Data: obj,
+      token: generateToken(userdata.rows[0].id, userdata.rows[0].mail),
+      data: userData,
     });
+
   } catch (error) {
     return res.status(404).json({ msg: error.message });
   }
@@ -107,7 +125,7 @@ router.post("/login", async (req, res) => {
     let mail = req.body.mail;
     let result = await client.query(
       "SELECT * FROM users WHERE mail = $1 OR mail LIKE $2 OR phone = $3",
-      [mail, mail + " %",mail]
+      [mail, mail + " %", mail]
     );
 
     if (result.rows.length > 0) {

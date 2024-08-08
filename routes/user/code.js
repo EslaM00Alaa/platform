@@ -150,4 +150,77 @@ router.put("/buymonth", isUser, async (req, res) => {
 });
 
 
+
+
+
+
+
+router.put("/buymonthbycode", isUser, async (req, res) => {
+  try {
+    const { user_id, code, m_id } = req.body;
+
+    // Fetch teacher_id from months table
+    const { rows } = await client.query("SELECT teacher_id FROM months WHERE id = $1;", [m_id]);
+    if (rows.length === 0) {
+      return res.status(400).json({ msg: "Month ID is not valid." });
+    }
+    const { teacher_id } = rows[0];
+
+    // Check if the code exists and is not used
+    const result = await client.query(
+      "SELECT * FROM teachercode WHERE code = $1 AND teacher_id = $2 AND used = false;",
+      [code, teacher_id]
+    );
+
+    if (result.rows.length > 0) {
+      // Insert into joiningmonth
+      await client.query(
+        "INSERT INTO joiningmonth (u_id, m_id) VALUES ($1, $2);",
+        [user_id, m_id]
+      );
+
+      // Mark the code as used
+      await client.query(
+        "UPDATE teachercode SET used = true WHERE code = $1 AND teacher_id = $2;",
+        [code, teacher_id]
+      );
+
+      res.json({ msg: "Purchase successful." });
+    } else {
+      // Check if the code exists but has been used
+      const usedResult = await client.query(
+        "SELECT * FROM teachercode WHERE code = $1 AND teacher_id = $2;",
+        [code, teacher_id]
+      );
+
+      if (usedResult.rows.length > 0) {
+        return res.status(400).json({ msg: "Code has already been used." });
+      } else {
+        return res.status(400).json({ msg: "Code is not correct." });
+      }
+    }
+  } catch (error) {
+    console.error("Error in buyMonthByCode endpoint:", error);
+    return res.status(500).json({ msg: "Internal Server Error" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = router;
