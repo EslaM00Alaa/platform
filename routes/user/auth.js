@@ -68,7 +68,6 @@ router.post("/signup", async (req, res) => {
 
 
     return res.json({
-      msg: "ok you register successfully",
       token: generateToken(userdata.rows[0].id, userdata.rows[0].mail),
       data: userData,
     });
