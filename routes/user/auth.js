@@ -68,6 +68,7 @@ router.post("/signup", async (req, res) => {
 
 
     return res.json({
+      msg:"You Create Acc sucessfully ",
       token: generateToken(userdata.rows[0].id, userdata.rows[0].mail),
       Data: userData,
     });
