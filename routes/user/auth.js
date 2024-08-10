@@ -15,6 +15,8 @@ const express = require("express"),
   nodemailer = require("nodemailer"),
   router = express.Router();
 
+
+
 router.post("/signup", async (req, res) => {
   try {
     console.log(req.body.ip);
@@ -44,7 +46,7 @@ router.post("/signup", async (req, res) => {
 
 
 
-
+  let mail = req.body.mail ;
 
     const UID = result.rows[0].id,
       obj = result.rows[0];
@@ -75,6 +77,9 @@ router.post("/signup", async (req, res) => {
     return res.status(404).json({ msg: error.message });
   }
 });
+
+
+
 
 router.put("/edit/phone", isUser, async (req, res) => {
   try {
