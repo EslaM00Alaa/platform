@@ -69,7 +69,7 @@ router.post("/signup", async (req, res) => {
 
     return res.json({
       token: generateToken(userdata.rows[0].id, userdata.rows[0].mail),
-      data: userData,
+      Data: userData,
     });
 
   } catch (error) {
