@@ -292,7 +292,7 @@ router.get("/mymonthuser", isUser, async (req, res) => {
   }
 });
 
-// router.get('/monthinfo/:id', isUser, async (req, res) => {
+// router.get("/monthinfo/:id", isUser, async (req, res) => {
 //   try {
 //     const m_id = req.params.id;
 //     const { user_id } = req.body; // Assuming user_id is coming from the request body
@@ -301,7 +301,10 @@ router.get("/mymonthuser", isUser, async (req, res) => {
 //       return res.status(400).json({ msg: "User ID is required." });
 //     }
 
-//     const resss = await client.query("SELECT * FROM joiningmonth WHERE u_id = $1 AND m_id = $2;", [user_id, m_id]);
+//     const resss = await client.query(
+//       "SELECT * FROM joiningmonth WHERE u_id = $1 AND m_id = $2;",
+//       [user_id, m_id]
+//     );
 //     if (resss.rows.length === 0) {
 //       return res.status(404).json({ msg: "YOU DON'T HAVE PERMISSION" });
 //     }
@@ -320,29 +323,50 @@ router.get("/mymonthuser", isUser, async (req, res) => {
 //       JOIN covers c ON c.image_id = lg.cover
 //       JOIN lectureofmonths lofm ON lofm.lg_id = lg.id
 //       WHERE lofm.m_id = $1
-//       ORDER BY lofm.id ;
+//       ORDER BY lofm.id;
 //     `;
 
 //     const result = await client.query(sql, [m_id]);
-//     result.rows[0].open = true;
+
+//     const openFlags = [true]; // Array to store the open flags
 
 //     for (let i = 1; i < result.rows.length; i++) {
-//       const lg_id = result.rows[i - 1].id;
+//       const lg_id = result.rows[i-1].id;
 //       let flag = true;
-//       const exam_id = (await client.query("SELECT exam_id FROM lecture_group WHERE id = $1;", [lg_id])).rows[0].exam_id;
+
+//       const exam_id_res = await client.query(
+//         "SELECT exam_id FROM lecture_group WHERE id = $1;",
+//         [lg_id]
+//       );
+//       const exam_id = exam_id_res.rows[0]?.exam_id;
 
 //       if (exam_id) {
-//         const number = (await client.query("SELECT number FROM exams WHERE id = $1;", [exam_id])).rows[0].number;
-//         const resultsofexam = await client.query("SELECT result FROM examssresult WHERE u_id = $1 AND exam_id = $2;", [user_id, exam_id]);
-//         flag = false ;
+//         const number_res = await client.query(
+//           "SELECT number FROM exams WHERE id = $1;",
+//           [exam_id]
+//         );
+//         const number = number_res.rows[0]?.number;
+
+//         const resultsofexam = await client.query(
+//           "SELECT result FROM examssresult WHERE u_id = $1 AND exam_id = $2;",
+//           [user_id, exam_id]
+//         );
+
+//         flag = false;
 //         for (let j = 0; j < resultsofexam.rows.length; j++) {
-//           let resultofexam = resultsofexam.rows[j].result;
-//           if (resultofexam >= (number / 2)) {
+//           const resultofexam = resultsofexam.rows[j].result;
+//           if (resultofexam >= number / 2) {
 //             flag = true;
+//             break; // Break the loop once a passing result is found
 //           }
 //         }
 //       }
-//       result.rows[i].open = flag;
+//       openFlags.push(flag);
+//     }
+
+//     // Assign open flags to result rows
+//     for (let i = 0; i < result.rows.length; i++) {
+//       result.rows[i].open = openFlags[i];
 //     }
 
 //     res.json({ monthData: result1.rows[0], monthcontent: result.rows });
@@ -351,6 +375,45 @@ router.get("/mymonthuser", isUser, async (req, res) => {
 //     res.status(500).json({ msg: "Internal server error." });
 //   }
 // });
+
+async function HasExam(l_id) {
+  try {
+    const exam_id_res = await client.query(
+      "SELECT exam_id FROM lecture_group WHERE id = $1;",
+      [l_id]
+    );
+    const exam_id = exam_id_res.rows[0]?.exam_id;
+    return exam_id;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Internal server error." });
+  }
+}
+
+async function isPassed(user_id, exam_id) {
+  try {
+    const number_res = await client.query(
+      "SELECT number FROM exams WHERE id = $1;",
+      [exam_id]
+    );
+    const number = number_res.rows[0].number;
+
+    const resultsofexam = await client.query(
+      "SELECT result FROM examssresult WHERE u_id = $1 AND exam_id = $2;",
+      [user_id, exam_id]
+    );
+
+    if (resultsofexam.rows.length) {
+      for (let i = 0; i < resultsofexam.rows.length; i++) {
+        if (resultsofexam.rows[i].result > number / 2) return true;
+      }
+      return false;
+    } else return false;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Internal server error." });
+  }
+}
 
 router.get("/monthinfo/:id", isUser, async (req, res) => {
   try {
@@ -378,56 +441,27 @@ router.get("/monthinfo/:id", isUser, async (req, res) => {
     const result1 = await client.query(sql1, [m_id]);
 
     const sql = `
-      SELECT lg.id, c.image, lg.description
-      FROM lecture_group lg
-      JOIN covers c ON c.image_id = lg.cover
-      JOIN lectureofmonths lofm ON lofm.lg_id = lg.id
-      WHERE lofm.m_id = $1
-      ORDER BY lofm.id;
+    SELECT lg.id, c.image, lg.description, TRUE AS open
+    FROM lecture_group lg
+    JOIN covers c ON c.image_id = lg.cover
+    JOIN lectureofmonths lofm ON lofm.lg_id = lg.id
+    WHERE lofm.m_id = $1
+    ORDER BY lofm.id;
     `;
 
     const result = await client.query(sql, [m_id]);
 
-    const openFlags = [true]; // Array to store the open flags
+    // if (result.rows.length) result.rows[0].open = true;
 
-    for (let i = 1; i < result.rows.length; i++) {
-      const lg_id = result.rows[i-1].id;
-      let flag = true;
+    // for (let i = 1; i < result.rows.length; i++) {
+    //   const lg_id = result.rows[i - 1].id;
+    //   let exam_id = await HasExam(lg_id);
+    //   if (exam_id) {
+    //     result.rows[i].open = await isPassed(user_id, exam_id);
+    //   }
+    // }
 
-      const exam_id_res = await client.query(
-        "SELECT exam_id FROM lecture_group WHERE id = $1;",
-        [lg_id]
-      );
-      const exam_id = exam_id_res.rows[0]?.exam_id;
-
-      if (exam_id) {
-        const number_res = await client.query(
-          "SELECT number FROM exams WHERE id = $1;",
-          [exam_id]
-        );
-        const number = number_res.rows[0]?.number;
-
-        const resultsofexam = await client.query(
-          "SELECT result FROM examssresult WHERE u_id = $1 AND exam_id = $2;",
-          [user_id, exam_id]
-        );
-
-        flag = false;
-        for (let j = 0; j < resultsofexam.rows.length; j++) {
-          const resultofexam = resultsofexam.rows[j].result;
-          if (resultofexam >= number / 2) {
-            flag = true;
-            break; // Break the loop once a passing result is found
-          }
-        }
-      }
-      openFlags.push(flag);
-    }
-
-    // Assign open flags to result rows
-    for (let i = 0; i < result.rows.length; i++) {
-      result.rows[i].open = openFlags[i];
-    }
+    console.log({ monthData: result1.rows[0], monthcontent: result.rows });
 
     res.json({ monthData: result1.rows[0], monthcontent: result.rows });
   } catch (error) {
@@ -435,14 +469,5 @@ router.get("/monthinfo/:id", isUser, async (req, res) => {
     res.status(500).json({ msg: "Internal server error." });
   }
 });
-
-
-
-
-
-
-
-
-
 
 module.exports = router;

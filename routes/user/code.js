@@ -168,8 +168,8 @@ router.put("/buymonthbycode", isUser, async (req, res) => {
 
     // Check if the code exists and is not used
     const result = await client.query(
-      "SELECT * FROM teachercode WHERE code = $1 AND teacher_id = $2 AND used = false;",
-      [code, teacher_id]
+      "SELECT * FROM teachercode WHERE code = $1 AND teacher_id = $2 AND m_id = $3 AND used = false;",
+      [code, teacher_id,m_id]
     );
 
     if (result.rows.length > 0) {

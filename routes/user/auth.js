@@ -15,8 +15,6 @@ const express = require("express"),
   nodemailer = require("nodemailer"),
   router = express.Router();
 
-
-
 router.post("/signup", async (req, res) => {
   try {
     console.log(req.body.ip);
@@ -44,9 +42,7 @@ router.post("/signup", async (req, res) => {
       req.body.grad,
     ]);
 
-
-
-  let mail = req.body.mail ;
+    let mail = req.body.mail;
 
     const UID = result.rows[0].id,
       obj = result.rows[0];
@@ -56,30 +52,22 @@ router.post("/signup", async (req, res) => {
       UID,
     ]);
 
-
-    
     let userdata = await client.query(
       "SELECT * FROM users WHERE mail = $1 OR mail LIKE $2 OR phone = $3",
       [mail, mail + " %", mail]
     );
 
-
     const { pass, verify_code, ...userData } = userdata.rows[0];
 
-
     return res.json({
-      msg:"You Create Acc sucessfully ",
+      msg: "You Create Acc sucessfully ",
       token: generateToken(userdata.rows[0].id, userdata.rows[0].mail),
       Data: userData,
     });
-
   } catch (error) {
     return res.status(404).json({ msg: error.message });
   }
 });
-
-
-
 
 router.put("/edit/phone", isUser, async (req, res) => {
   try {
@@ -341,6 +329,70 @@ router.get("/lecture/:teacherId", isUser, async (req, res) => {
   }
 });
 
+async function Teacher_student(t_id) {
+  try {
+    let centerStudents = await client.query(
+      `SELECT 
+    g.teacher_id,
+    COUNT(j.std_id) AS number_of_students
+    FROM 
+        groups g
+    JOIN 
+        joingroup j ON g.id = j.group_id
+    WHERE 
+        g.teacher_id = $1 -- Replace $1 with the teacher_id value
+    GROUP BY 
+        g.teacher_id;
+`,
+      [t_id]
+    ).rows[0]?.number_of_students||0;
+
+    let num = await client.query(
+      `SELECT 
+  SELECT 
+    SUM(group_totals.student_count * group_totals.month_count) AS total
+FROM (
+    SELECT 
+        g.id AS group_id,
+        COUNT(DISTINCT j.std_id) AS student_count,
+        COUNT(DISTINCT gm.m_id) AS month_count
+    FROM 
+        groups g
+    LEFT JOIN 
+        joingroup j ON g.id = j.group_id
+    LEFT JOIN 
+        groupsmonths gm ON g.id = gm.g_id
+    WHERE 
+        g.teacher_id = $1  -- Replace $1 with the teacher_id value
+    GROUP BY 
+        g.id
+) AS group_totals;
+
+`,
+      [t_id]
+    ).rows[0]?.group_totals||0;
+
+    let onlineStudents =
+      (await client.query(
+        `SELECT 
+    COUNT(DISTINCT jm.u_id) AS number_of_users
+FROM 
+    months m
+JOIN 
+    joiningmonth jm ON m.id = jm.m_id
+WHERE 
+    m.teacher_id = $1;  -- Replace $1 with the teacher_id (t_id) value
+`,
+        [t_id]
+      ).rows[0].number_of_users) - num;
+
+    return { centerStudents, onlineStudents };
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
 router.get("/myteacher", isUser, async (req, res) => {
   try {
     const { user_id } = req.body; // Destructure user_id directly from req.body
@@ -383,6 +435,13 @@ ORDER BY
         `,
       [grad_id]
     );
+
+    // for (let i = 0; i < result.rows.length; i++) {
+    //   let { centerStudents, onlineStudents } = await Teacher_student(
+    //     result.rows[i].id
+    //   );
+    //   result.rows[i] = { ...result.row[i], centerStudents, onlineStudents };
+    // }
 
     res.json(result.rows);
   } catch (error) {

@@ -269,6 +269,7 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
   try {
     const { lg_id } = req.params; // Corrected variable name from lo_id to lg_id
     const { user_id } = req.body;
+    console.log("first");
 
     const permissionCheckQuery = {
       text: "SELECT * FROM joininglecture WHERE u_id = $1 AND lgroup_id = $2", // Corrected lonline_id to lgroup_id
@@ -283,10 +284,22 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
     }
 
     const lectureQuery = {
-      text: "SELECT c.image,lg.description, e.id AS exam_id, e.name AS exam_name, er.result AS last_result FROM lecture_group lg LEFT JOIN covers c ON lg.cover = c.image_id  LEFT JOIN exams e ON lg.exam_id = e.id LEFT JOIN exaresult er ON er.u_id = $1 AND er.exam_id = e.id WHERE lg.id = $2",
+      text: `
+        SELECT c.image, lg.description, e.id AS exam_id, e.name AS exam_name, er.result AS last_result 
+        FROM lecture_group lg 
+        LEFT JOIN covers c ON lg.cover = c.image_id  
+        LEFT JOIN exams e ON lg.exam_id = e.id 
+        LEFT JOIN examresult er ON er.u_id = $1 AND er.exam_id = e.id
+        LEFT JOIN questiones q ON q.exam_id = e.id
+        WHERE lg.id = $2
+        GROUP BY c.image, lg.description, e.id, e.name, er.result
+        HAVING COUNT(q.id) >= e.number
+      `,
       values: [user_id, lg_id],
     };
+    
     const lectureResult = await client.query(lectureQuery);
+    
 
     let videos = await client.query(
       "SELECT id, v_name FROM lecturevideos WHERE lg_id = $1",
@@ -307,47 +320,6 @@ router.get("/lecturegroup/:lg_id", isUser, async (req, res) => {
   }
 });
 
-router.get("/lecturemonth/:lg_id", isUser, async (req, res) => {
-  try {
-    const { lg_id } = req.params; // Corrected variable name from lo_id to lg_id
-    const { user_id } = req.body;
-
-    const permissionCheckQuery = {
-      text: "SELECT l.id  FROM lectureofmonths l JOIN joiningmonth jm ON l.m_id = jm.m_id AND jm.u_id = $1 WHERE l.lg_id = $2;", // Corrected lonline_id to lgroup_id
-      values: [user_id, lg_id],
-    };
-    const permissionResult = await client.query(permissionCheckQuery);
-
-    if (permissionResult.rows.length === 0) {
-      return res.status(404).json({
-        msg: "You do not have permission to access this lecture content.",
-      });
-    }
-
-    const lectureQuery = {
-      text: "SELECT c.image,lg.description, e.id AS exam_id, e.name AS exam_name, er.result AS last_result FROM lecture_group lg LEFT JOIN covers c ON lg.cover = c.image_id  LEFT JOIN exams e ON lg.exam_id = e.id LEFT JOIN examssresult er ON er.u_id = $1 AND er.exam_id = e.id WHERE lg.id = $2",
-      values: [user_id, lg_id],
-    };
-    const lectureResult = await client.query(lectureQuery);
-
-    let videos = await client.query(
-      "SELECT id, v_name FROM lecturevideos WHERE lg_id = $1",
-      [lg_id]
-    ); // Corrected lo_id to lg_id
-    let pdfs = await client.query(
-      "SELECT id, pdf_name , pdf_path FROM lecturepdf WHERE lg_id = $1",
-      [lg_id]
-    );
-
-    lectureResult.rows[0].videos = videos.rows;
-    lectureResult.rows[0].pdfs = pdfs.rows;
-
-    res.json(lectureResult.rows[0]);
-  } catch (error) {
-    console.error("Error fetching lecture details:", error);
-    res.status(500).json({ msg: "Internal server error" });
-  }
-});
 
 router.get("/videom/:id", isUser, async (req, res) => {
   try {
@@ -537,20 +509,27 @@ router.get("/videot/:id", isTeacher, async (req, res) => {
 
 router.post("/exam", isTeacher, async (req, res) => {
   try {
+    console.log(req.body);
+    
+
     const { error } = validateExam(req.body);
     if (error) {
+      console.log();
+      
       return res.status(400).json({ msg: error.details[0].message }); // Changed status code to 400 for bad request
     }
 
-    const { lo_id, name, number, lg_id } = req.body;
+    const { lo_id, name, number,time,lg_id } = req.body;
+
+
 
     // Start a database transaction
     await client.query("BEGIN");
 
     // Insert new exam
     const result = await client.query(
-      "INSERT INTO exams (name, number) VALUES ($1, $2) RETURNING id;",
-      [name, number]
+      "INSERT INTO exams (name,time,number) VALUES ($1,$2,$3) RETURNING id;",
+      [name,time,number]
     );
     const examId = result.rows[0].id;
 
@@ -673,6 +652,100 @@ router.delete("/exam/lonline/:id", isTeacher, async (req, res) => {
     res.status(500).json({ msg: "Internal server error" });
   }
 });
+
+
+
+
+
+
+router.get("/lecturemonth/:lg_id", isUser, async (req, res) => {
+  try {
+    const { lg_id } = req.params;  // Extract lecture group ID from route parameters
+    const { user_id } = req.body;  // Extract user ID from the request body
+    console.log(lg_id);
+  
+    // Check if the user has permission to access this lecture content
+    const permissionCheckQuery = {
+      text: "SELECT l.id FROM lectureofmonths l JOIN joiningmonth jm ON l.m_id = jm.m_id AND jm.u_id = $1 WHERE l.lg_id = $2;",
+      values: [user_id, lg_id],
+    };
+    const permissionResult = await client.query(permissionCheckQuery);
+
+    // If the user doesn't have permission, return a 403 response
+    if (permissionResult.rows.length === 0) {
+      return res.status(403).json({
+        msg: "You do not have permission to access this lecture content.",
+      });
+    }
+
+    const lectureQuery = {
+      text: `
+        SELECT 
+          c.image, 
+          lg.description, 
+          CASE 
+            WHEN COUNT(q.id) >= e.number THEN e.id 
+            ELSE NULL 
+          END AS exam_id, 
+          CASE 
+            WHEN COUNT(q.id) >= e.number THEN e.name 
+            ELSE NULL 
+          END AS exam_name, 
+          er.result AS last_result 
+        FROM lecture_group lg 
+        LEFT JOIN covers c ON lg.cover = c.image_id  
+        LEFT JOIN exams e ON lg.exam_id = e.id 
+        LEFT JOIN examresult er ON er.u_id = $1 AND er.exam_id = e.id
+        LEFT JOIN questiones q ON q.exam_id = e.id
+        WHERE lg.id = $2
+        GROUP BY c.image, lg.description, e.id, e.name, er.result
+      `,
+      values: [user_id, lg_id],
+    };
+    
+    const lectureResult = await client.query(lectureQuery);
+    
+
+    // If no lecture details are found, return a 404 response
+    if (lectureResult.rows.length === 0) {
+      return res.status(404).json({
+        msg: "Lecture not found or not enough questions for the exam.",
+      });
+    }
+
+    // Fetch related videos and PDFs for the lecture
+    const videos = await client.query(
+      "SELECT id, v_name FROM lecturevideos WHERE lg_id = $1",
+      [lg_id]
+    );
+    const pdfs = await client.query(
+      "SELECT id, pdf_name, pdf_path FROM lecturepdf WHERE lg_id = $1",
+      [lg_id]
+    );
+
+    // Attach videos and PDFs to the lecture result
+    const lectureData = {
+      ...lectureResult.rows[0],
+      videos: videos.rows || [],
+      pdfs: pdfs.rows || [],
+    };
+
+    // Return the lecture details with videos and PDFs
+    res.json(lectureData);
+  } catch (error) {
+    console.error("Error fetching lecture details:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
+
+
+
+
+
+
+
+
+
 
 router.delete("/exam/group/:id", isTeacher, async (req, res) => {
   try {

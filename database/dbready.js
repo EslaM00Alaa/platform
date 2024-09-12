@@ -90,6 +90,7 @@ async function isReady() {
       CREATE TABLE IF NOT EXISTS exams (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
+        time INT NOT NULL,
         number INT NOT NULL
       );
       `,
@@ -168,7 +169,7 @@ async function isReady() {
       );
       `,
       `
-      CREATE TABLE IF NOT EXISTS exaresult (
+      CREATE TABLE IF NOT EXISTS examresult (
         id SERIAL PRIMARY KEY,
         u_id INT REFERENCES users (id)  ON DELETE CASCADE NOT NULL,
         exam_id INT REFERENCES exams (id)  ON DELETE CASCADE NOT NULL,
@@ -252,6 +253,7 @@ async function isReady() {
         id SERIAL PRIMARY KEY,
         code VARCHAR(300),
         teacher_id INT REFERENCES teachers(id),
+        m_id INT REFERENCES months (id) ON DELETE CASCADE,
         used BOOLEAN DEFAULT false
        );
         `,
@@ -278,7 +280,7 @@ async function isReady() {
       "teacherwallet",
       "codes",
       "questiones",
-      "exaresult",
+      "examresult",
       "lecturevideos",
       "usersip",
       "user_teacher",
