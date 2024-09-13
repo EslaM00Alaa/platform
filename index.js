@@ -66,16 +66,9 @@ app.get("/dealltable", async (req, res) => {
 });
 
 client.connect().then(async () => {
-  // await client.query("DELETE FROM lectureinmonths; DELETE FROM joiningmonth; DELETE FROM groupsmonths; DELETE FROM lectureofmonths; DELETE FROM months;")
-  await client.query(`
- ALTER TABLE groupsmonths
-DROP CONSTRAINT IF EXISTS groupsmonths_g_id_fkey;
-
-ALTER TABLE groupsmonths
-ADD CONSTRAINT groupsmonths_g_id_fkey
-FOREIGN KEY (g_id) REFERENCES groups (id) ON DELETE CASCADE;
-  `);
-  console.log();
+   await client("DROP TABLE IF EXISTS questiones;") 
+   await client("DROP TABLE IF EXISTS examresult;") 
+   await client("DROP TABLE IF EXISTS exams;") 
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
   await isReady();
