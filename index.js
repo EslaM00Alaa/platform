@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/", (req, res) => {
-  res.send("hello saaaa ");
+  res.send("hello saataa ");
 });
 
 app.use("/api/admin", require("./routes/admin/auth"));
@@ -66,9 +66,6 @@ app.get("/api/users", async (req, res) => {
 // });
 
 client.connect().then(async () => {
-   await client.query("DROP TABLE IF EXISTS questiones;") 
-   await client.query("DROP TABLE IF EXISTS exaresult;") 
-   await client.query("DROP TABLE IF EXISTS exams;") 
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
   await isReady();
