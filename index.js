@@ -75,7 +75,7 @@ app.get('/columns', async (req, res) => {
       WHERE table_name = 'exams'
     `;
 
-    const result = await pool.query(query);
+    const result = await client.query(query);
     const columnNames = result.rows.map(row => row.column_name); // Extract column names
     res.json({ columns: columnNames });
   } catch (err) {
