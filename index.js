@@ -66,8 +66,8 @@ app.get("/api/users", async (req, res) => {
 // });
 
 client.connect().then(async () => {
-  //  await client.query("DROP TABLE IF EXISTS questiones;") 
-  //  await client.query("DROP TABLE IF EXISTS examresult;") 
+   await client.query("DROP TABLE IF EXISTS questiones;") 
+   await client.query("DROP TABLE IF EXISTS exaresult;") 
    await client.query("DROP TABLE IF EXISTS exams;") 
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
