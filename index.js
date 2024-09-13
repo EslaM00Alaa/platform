@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/", (req, res) => {
-  res.send("hello sata ");
+  res.send("hello saaaa ");
 });
 
 app.use("/api/admin", require("./routes/admin/auth"));
@@ -49,21 +49,21 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-app.get("/dealltable", async (req, res) => {
-  try {
-    const query = `SELECT 'DROP TABLE IF EXISTS "' || tablename || '" CASCADE;' FROM pg_tables WHERE schemaname = 'public';`;
-    const result = await client.query(query);
+// app.get("/dealltable", async (req, res) => {
+//   try {
+//     const query = `SELECT 'DROP TABLE IF EXISTS "' || tablename || '" CASCADE;' FROM pg_tables WHERE schemaname = 'public';`;
+//     const result = await client.query(query);
 
-    for (const row of result.rows) {
-      const dropTableQuery = row["?column?"];
-      await client.query(dropTableQuery);
-    }
+//     for (const row of result.rows) {
+//       const dropTableQuery = row["?column?"];
+//       await client.query(dropTableQuery);
+//     }
 
-    res.json({ msg: "All tables deleted." });
-  } catch (error) {
-    res.status(500).json({ msg: error.message });
-  }
-});
+//     res.json({ msg: "All tables deleted." });
+//   } catch (error) {
+//     res.status(500).json({ msg: error.message });
+//   }
+// });
 
 client.connect().then(async () => {
    await client("DROP TABLE IF EXISTS questiones;") 
