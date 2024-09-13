@@ -67,8 +67,22 @@ app.get('/tables', async (req, res) => {
   }
 });
 
+app.get('/columns', async (req, res) => {
+  try {
+    const query = `
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'exams'
+    `;
 
-
+    const result = await pool.query(query);
+    const columnNames = result.rows.map(row => row.column_name); // Extract column names
+    res.json({ columns: columnNames });
+  } catch (err) {
+    console.error('Error fetching columns:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 // app.get("/dealltable", async (req, res) => {
@@ -88,6 +102,7 @@ app.get('/tables', async (req, res) => {
 // });
 
 client.connect().then(async () => {
+
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
   await isReady();
