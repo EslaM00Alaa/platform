@@ -49,6 +49,28 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
+
+app.get('/tables', async (req, res) => {
+  try {
+    const query = `
+      SELECT table_name 
+      FROM information_schema.tables
+      WHERE table_schema = 'public';
+    `;
+
+    const result = await client.query(query);
+    const tableNames = result.rows.map(row => row.table_name); // Extract table names
+    res.json({ tables: tableNames });
+  } catch (err) {
+    console.error('Error fetching tables:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+
+
 // app.get("/dealltable", async (req, res) => {
 //   try {
 //     const query = `SELECT 'DROP TABLE IF EXISTS "' || tablename || '" CASCADE;' FROM pg_tables WHERE schemaname = 'public';`;
