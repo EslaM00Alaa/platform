@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/", (req, res) => {
-  res.send("hello saataa ");
+  res.send("server is work");
 });
 
 app.use("/api/admin", require("./routes/admin/auth"));
@@ -50,39 +50,42 @@ app.get("/api/users", async (req, res) => {
 });
 
 
-app.get('/tables', async (req, res) => {
+// POST: Insert grade
+app.post("/api/grad", async (req, res) => {
   try {
-    const query = `
-      SELECT table_name 
-      FROM information_schema.tables
-      WHERE table_schema = 'public';
-    `;
+    const name = req.body.name;
 
-    const result = await client.query(query);
-    const tableNames = result.rows.map(row => row.table_name); // Extract table names
-    res.json({ tables: tableNames });
-  } catch (err) {
-    console.error('Error fetching tables:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    // Check if the name exists in the request
+    if (!name) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+
+    // Insert the grade into the database
+    await client.query("INSERT INTO grades (name) VALUES ($1);", [name]);
+
+    // Send a success response
+    res.status(201).json({ message: "Grade added successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/columns', async (req, res) => {
+// GET: Fetch all grades
+app.get("/api/grad", async (req, res) => {
   try {
-    const query = `
-      SELECT column_name
-      FROM information_schema.columns
-      WHERE table_name = 'exams'
-    `;
+    // Retrieve all the grades from the database
+    const result = await client.query("SELECT * FROM grades");
 
-    const result = await client.query(query);
-    const columnNames = result.rows.map(row => row.column_name); // Extract column names
-    res.json({ columns: columnNames });
-  } catch (err) {
-    console.error('Error fetching columns:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    // Send the results as a JSON response
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
+
+
 
 
 // app.get("/dealltable", async (req, res) => {
@@ -102,7 +105,7 @@ app.get('/columns', async (req, res) => {
 // });
 
 client.connect().then(async () => {
-
+  await client.query("DROP TABLE IF EXISTS teachercode");
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
   await isReady();
