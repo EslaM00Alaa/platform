@@ -1,5 +1,6 @@
 const path = require("path");
 const isReady = require("./database/dbready");
+const isAdmin = require("./middleware/isAdmin");
 
 require("dotenv").config();
 const express = require("express"),
@@ -39,6 +40,9 @@ app.use("/api/user", require("./routes/user/code"));
 app.use("/api/user", require("./routes/user/exam/exam"));
 app.use("/api/month", require("./routes/month/month"));
 app.use("/api/teachercode", require("./routes/codeTeacher/validatecode"));
+app.use("/api/teacherusers", require("./routes/teacher/usersTeacher"));
+
+
 
 app.get("/api/users", async (req, res) => {
   try {
@@ -51,7 +55,7 @@ app.get("/api/users", async (req, res) => {
 
 
 // POST: Insert grade
-app.post("/api/grad", async (req, res) => {
+app.post("/api/grad",isAdmin, async (req, res) => {
   try {
     const name = req.body.name;
 
