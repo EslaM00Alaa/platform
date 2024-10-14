@@ -8,9 +8,9 @@ function validateUser(obj)
         fName:joi.string().trim().required(),
         lName:joi.string().trim().required(),
         mail:joi.string().trim().required(),
-        pass:joi.string().trim().max(300).required(),
+        pass:joi.string().trim().min(6).max(16).required(),
         lastVerifyCode:joi.string().trim(),
-        phone:joi.string().trim(),
+        phone:joi.string().length(11).trim(),
         ip:joi.string().trim().required(),
         grad:joi.number(),
     })

@@ -3,6 +3,7 @@ const isReady = require("./database/dbready");
 const isAdmin = require("./middleware/isAdmin");
 
 require("dotenv").config();
+
 const express = require("express"),
   bodyParser = require("body-parser"),
   cors = require("cors"),
@@ -19,8 +20,11 @@ app.use(function (req, res, next) {
 });
 
 app.use(bodyParser.json());
+
 app.use(express.urlencoded({ extended: true }));
+
 app.use(express.json());
+
 app.use(cors());
 
 app.get("/", (req, res) => {
@@ -42,8 +46,6 @@ app.use("/api/month", require("./routes/month/month"));
 app.use("/api/teachercode", require("./routes/codeTeacher/validatecode"));
 app.use("/api/teacherusers", require("./routes/teacher/usersTeacher"));
 
-
-
 app.get("/api/users", async (req, res) => {
   try {
     let result = await client.query("SELECT fName , mail , pass FROM users ;");
@@ -53,9 +55,8 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-
 // POST: Insert grade
-app.post("/api/grad",isAdmin, async (req, res) => {
+app.post("/api/grad", isAdmin, async (req, res) => {
   try {
     const name = req.body.name;
 
@@ -89,9 +90,6 @@ app.get("/api/grad", async (req, res) => {
   }
 });
 
-
-
-
 // app.get("/dealltable", async (req, res) => {
 //   try {
 //     const query = `SELECT 'DROP TABLE IF EXISTS "' || tablename || '" CASCADE;' FROM pg_tables WHERE schemaname = 'public';`;
@@ -109,7 +107,6 @@ app.get("/api/grad", async (req, res) => {
 // });
 
 client.connect().then(async () => {
-  await client.query("DROP TABLE IF EXISTS teachercode");
   console.log("psql is connected ..");
   app.listen(port, () => console.log(`server run on port ${port} ...... `));
   await isReady();

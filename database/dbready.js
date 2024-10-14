@@ -256,9 +256,7 @@ async function isReady() {
         m_id INT REFERENCES months (id) ON DELETE CASCADE,
         used BOOLEAN DEFAULT false
        );
-        `,
-
-
+        `
     ];
 
     const tablesToCheck = [
